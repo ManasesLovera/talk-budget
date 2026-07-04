@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import BalanceHeader from "@/components/BalanceHeader";
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import AccountCard from "@/components/AccountCard";
+import DonutChart from "@/components/DonutChart";
 import {
   getCategories,
   getTransactions,
@@ -16,8 +18,17 @@ function monthBounds(): { start: string; end: string; label: string } {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), 1);
   const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-  const label = now.toLocaleDateString(undefined, { month: "long" });
+  const label = now.toLocaleDateString(undefined, { month: "long", year: "numeric" });
   return { start: start.toISOString(), end: end.toISOString(), label };
+}
+
+// Fixed categorical order (never cycled) — first four ranked categories get
+// their own slot, the rest fold into "Others".
+const SEGMENT_COLORS = ["#2a78d6", "#1baf7a", "#eda100", "#008300"];
+const OTHERS_COLOR = "#4a3aa7";
+
+function money(n: number): string {
+  return n.toLocaleString(undefined, { maximumFractionDigits: 0 });
 }
 
 export default function DashboardPage() {
@@ -25,6 +36,7 @@ export default function DashboardPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showMore, setShowMore] = useState(false);
   const { start, end, label } = monthBounds();
 
   useEffect(() => {
@@ -47,7 +59,10 @@ export default function DashboardPage() {
   const expenses = transactions
     .filter((t) => t.type === "expense")
     .reduce((sum, t) => sum + parseFloat(t.amount), 0);
-  const left = income - expenses;
+
+  const netWorth = wallets.reduce((sum, w) => sum + parseFloat(w.balance), 0);
+  const endingBalance = netWorth;
+  const openingBalance = netWorth - (income - expenses);
 
   const spendByCategory = new Map<string, number>();
   transactions
@@ -57,59 +72,142 @@ export default function DashboardPage() {
         categories.find((c) => c.id === t.category_id)?.name ?? "Uncategorized";
       spendByCategory.set(name, (spendByCategory.get(name) ?? 0) + parseFloat(t.amount));
     });
-  const topCategories = Array.from(spendByCategory.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
+  const ranked = Array.from(spendByCategory.entries()).sort((a, b) => b[1] - a[1]);
+  const topFour = ranked.slice(0, 4);
+  const rest = ranked.slice(4);
+  const othersTotal = rest.reduce((sum, [, amount]) => sum + amount, 0);
 
-  const netWorth = wallets.reduce((sum, w) => sum + parseFloat(w.balance), 0);
+  const segments = [
+    ...topFour.map(([name, amount], i) => ({
+      label: name,
+      value: amount,
+      color: SEGMENT_COLORS[i],
+    })),
+    ...(othersTotal > 0 ? [{ label: "Others", value: othersTotal, color: OTHERS_COLOR }] : []),
+  ];
 
   if (loading) {
     return <p className="py-8 text-center text-sm text-slate-400">Loading…</p>;
   }
 
   return (
-    <div className="pb-2">
-      <BalanceHeader
-        title={`${label} overview`}
-        amount={Math.max(left, 0)}
-        spent={expenses}
-        total={income || expenses || 1}
-      />
+    <div className="space-y-4 px-4 py-4">
+      <p className="px-1 text-sm font-semibold text-slate-400">{label}</p>
 
-      <section className="mx-4 -mt-4 rounded-card bg-white p-5 shadow-card">
-        <div className="flex items-center justify-between">
-          <span className="font-bold text-brand-900">Income</span>
-          <span className="font-bold text-brand-500">
-            ${income.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-          </span>
+      {/* Balance */}
+      <Link
+        href="/wallets"
+        className="block rounded-card bg-white p-4 shadow-card"
+      >
+        <div className="mb-3 flex items-center justify-between">
+          <span className="font-bold text-brand-900">Balance</span>
+          <ChevronRight className="h-4 w-4 text-slate-300" />
         </div>
-        <div className="mt-3 flex items-center justify-between">
-          <span className="font-bold text-brand-900">Expenses</span>
-          <span className="font-bold text-brand-900">
-            -${expenses.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-          </span>
-        </div>
-
-        {topCategories.length > 0 && (
-          <div className="mt-4 divide-y divide-brand-50">
-            <p className="pb-2 text-xs font-semibold uppercase text-slate-400">
-              Top spending
+        <div className="flex gap-6">
+          <div>
+            <p className="text-xs text-slate-400">Opening balance</p>
+            <p className="mt-1 font-bold text-brand-900">
+              ${openingBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
             </p>
-            {topCategories.map(([name, amount]) => (
-              <div key={name} className="flex items-center justify-between py-2.5">
-                <span className="font-medium text-brand-900">{name}</span>
-                <span className="font-semibold text-slate-500">
-                  ${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                </span>
-              </div>
-            ))}
           </div>
+          <div>
+            <p className="text-xs text-slate-400">Ending balance</p>
+            <p className="mt-1 font-bold text-brand-900">
+              ${endingBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+            </p>
+          </div>
+        </div>
+      </Link>
+
+      {/* Expense structure */}
+      <section className="rounded-card bg-white p-4 shadow-card">
+        <div className="mb-4 flex items-center justify-between">
+          <span className="font-bold text-brand-900">Expense Structure</span>
+        </div>
+
+        {segments.length === 0 ? (
+          <p className="py-6 text-center text-sm text-slate-400">
+            No expenses yet this month.
+          </p>
+        ) : (
+          <>
+            <div className="flex items-center gap-5">
+              <DonutChart
+                segments={segments}
+                centerLabel="Expense"
+                centerValue={`$${money(expenses)}`}
+              />
+              <div className="flex-1 space-y-2.5">
+                {segments.map((s) => (
+                  <div key={s.label} className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-2 text-brand-900">
+                      <span
+                        className="h-2.5 w-2.5 shrink-0 rounded-full"
+                        style={{ backgroundColor: s.color }}
+                      />
+                      {s.label}
+                    </span>
+                    <span className="font-semibold text-slate-500">
+                      {expenses > 0 ? ((s.value / expenses) * 100).toFixed(1) : "0"}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {rest.length > 0 && (
+              <>
+                {showMore && (
+                  <div className="mt-3 space-y-2 border-t border-brand-50 pt-3">
+                    {rest.map(([name, amount]) => (
+                      <div key={name} className="flex items-center justify-between text-sm">
+                        <span className="flex items-center gap-2 text-brand-900">
+                          <span
+                            className="h-2.5 w-2.5 shrink-0 rounded-full"
+                            style={{ backgroundColor: OTHERS_COLOR }}
+                          />
+                          {name}
+                        </span>
+                        <span className="font-semibold text-slate-500">${money(amount)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <button
+                  onClick={() => setShowMore((v) => !v)}
+                  className="mt-3 text-xs font-semibold text-brand-600"
+                >
+                  {showMore ? "Show less" : "Show more"}
+                </button>
+              </>
+            )}
+          </>
         )}
       </section>
 
-      <section className="mx-4 mt-6">
+      {/* Summary */}
+      <Link
+        href="/transactions"
+        className="block rounded-card bg-white p-4 shadow-card"
+      >
+        <div className="mb-3 flex items-center justify-between">
+          <span className="font-bold text-brand-900">Summary</span>
+          <ChevronRight className="h-4 w-4 text-slate-300" />
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-brand-900">Income</span>
+          <span className="font-bold text-brand-500">${money(income)}</span>
+        </div>
+        <div className="mt-2 flex items-center justify-between">
+          <span className="text-brand-900">Expense</span>
+          <span className="font-bold text-brand-900">-${money(expenses)}</span>
+        </div>
+      </Link>
+
+      {/* Net worth */}
+      <section>
         <h2 className="mb-3 px-1 text-lg font-extrabold text-brand-900">
-          Net worth · ${netWorth.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+          Net worth · ${money(netWorth)}
         </h2>
         <div className="space-y-3">
           {wallets.length === 0 ? (

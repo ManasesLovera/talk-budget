@@ -15,7 +15,7 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="sticky bottom-0 z-10 flex border-t border-brand-100 bg-white/95 backdrop-blur">
+    <nav className="flex shrink-0 border-t border-brand-100 bg-white/95 backdrop-blur">
       {TABS.map(({ href, label, icon: Icon }) => {
         const active = pathname === href;
         return (

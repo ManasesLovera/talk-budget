@@ -52,7 +52,7 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-full flex-col px-4">
-      <div className="flex-1 space-y-3 py-4">
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto py-4">
         {messages.map((m, i) => (
           <div
             key={i}
