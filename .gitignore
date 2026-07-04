@@ -1,0 +1,18 @@
+# Env / secrets
+.env
+*.env
+!example.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node / Next / Bun
+node_modules/
+.next/
+bun.lockb
+
+# OS
+.DS_Store

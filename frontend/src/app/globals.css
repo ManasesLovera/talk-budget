@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-mint-bg text-brand-900 antialiased;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Mobile-first: constrain the app to a phone-width column, centered. */
+.app-shell {
+  @apply mx-auto min-h-screen w-full max-w-md bg-mint-bg;
+}
