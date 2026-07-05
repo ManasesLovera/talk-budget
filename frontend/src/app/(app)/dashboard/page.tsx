@@ -91,9 +91,11 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-4 px-4 py-4">
+    <div className="space-y-4 px-4 py-4 md:mx-auto md:max-w-5xl md:px-8 md:py-6">
       <p className="px-1 text-sm font-semibold text-slate-400">{label}</p>
 
+      <div className="space-y-4 md:grid md:grid-cols-2 md:gap-5 md:space-y-0">
+      <div className="space-y-4">
       {/* Balance */}
       <Link
         href="/wallets"
@@ -184,7 +186,9 @@ export default function DashboardPage() {
           </>
         )}
       </section>
+      </div>
 
+      <div className="space-y-4">
       {/* Summary */}
       <Link
         href="/transactions"
@@ -221,6 +225,8 @@ export default function DashboardPage() {
           )}
         </div>
       </section>
+      </div>
+      </div>
     </div>
   );
 }

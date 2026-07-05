@@ -65,10 +65,10 @@ export default function WalletsPage() {
   const others = wallets.filter((w) => w.type !== "loan");
 
   return (
-    <div className="px-4 py-4">
+    <div className="px-4 py-4 md:mx-auto md:max-w-5xl md:px-8 md:py-6">
       <button
         onClick={() => setFormOpen((v) => !v)}
-        className="mb-4 flex w-full items-center justify-center gap-2 rounded-card bg-white py-3 font-bold text-brand-600 shadow-card"
+        className="mb-4 flex w-full items-center justify-center gap-2 rounded-card bg-white py-3 font-bold text-brand-600 shadow-card md:max-w-xl"
       >
         <Plus className="h-4 w-4" /> Add wallet or loan
       </button>
@@ -76,7 +76,7 @@ export default function WalletsPage() {
       {formOpen && (
         <form
           onSubmit={handleSubmit}
-          className="mb-4 space-y-3 rounded-card bg-white p-4 shadow-card"
+          className="mb-4 space-y-3 rounded-card bg-white p-4 shadow-card md:max-w-xl"
         >
           <input
             type="text"
@@ -129,6 +129,7 @@ export default function WalletsPage() {
               <h2 className="px-1 text-sm font-bold uppercase text-slate-400">
                 Wallets
               </h2>
+              <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
               {others.map((w) => {
                 const Icon = ICONS[w.type] ?? WalletIcon;
                 return (
@@ -157,6 +158,7 @@ export default function WalletsPage() {
                   </div>
                 );
               })}
+              </div>
             </div>
           )}
 
@@ -165,6 +167,7 @@ export default function WalletsPage() {
               <h2 className="px-1 text-sm font-bold uppercase text-slate-400">
                 Loans
               </h2>
+              <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
               {loans.map((w) => (
                 <div
                   key={w.id}
@@ -181,6 +184,7 @@ export default function WalletsPage() {
                   </span>
                 </div>
               ))}
+              </div>
             </div>
           )}
         </>

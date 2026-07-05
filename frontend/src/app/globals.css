@@ -11,7 +11,8 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Mobile-first: constrain the app to a phone-width column, centered. */
+/* Mobile-first: constrain the app to a phone-width column, centered.
+   Unlocked at md: so tablet/desktop can use the full viewport width. */
 .app-shell {
-  @apply mx-auto min-h-screen w-full max-w-md bg-mint-bg;
+  @apply mx-auto min-h-screen w-full max-w-md bg-mint-bg md:max-w-none;
 }

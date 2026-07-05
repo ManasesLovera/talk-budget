@@ -97,9 +97,9 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className="px-4 py-4">
+    <div className="px-4 py-4 md:mx-auto md:max-w-5xl md:px-8 md:py-6">
       {/* Quick actions */}
-      <div className="mb-4 flex gap-3">
+      <div className="mb-4 flex gap-3 md:max-w-xl">
         <button
           onClick={() => openForm("income")}
           className="flex flex-1 items-center justify-center gap-2 rounded-card bg-white py-3 font-bold text-brand-600 shadow-card"
@@ -117,7 +117,7 @@ export default function TransactionsPage() {
       {formOpen && (
         <form
           onSubmit={handleSubmit}
-          className="mb-4 space-y-3 rounded-card bg-white p-4 shadow-card"
+          className="mb-4 space-y-3 rounded-card bg-white p-4 shadow-card md:max-w-xl"
         >
           <div className="flex items-center justify-between">
             <span className="font-bold text-brand-900">
@@ -198,7 +198,7 @@ export default function TransactionsPage() {
           No transactions yet — add one above or ask the chat assistant.
         </p>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
           {transactions.map((t) => (
             <div
               key={t.id}

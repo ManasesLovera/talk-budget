@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
+import Sidebar from "@/components/Sidebar";
+import ChatWidget from "@/components/ChatWidget";
 import { AuthContext } from "@/lib/auth-context";
 import { clearToken, getMe, getToken, type User } from "@/lib/api";
 
@@ -43,10 +45,14 @@ export default function AppGroupLayout({
 
   return (
     <AuthContext.Provider value={{ user, refreshUser }}>
-      <div className="flex h-screen flex-col overflow-hidden">
-        <TopBar />
-        <main className="flex-1 overflow-y-auto">{children}</main>
-        <BottomNav />
+      <div className="flex h-screen overflow-hidden">
+        <Sidebar />
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <TopBar />
+          <main className="flex-1 overflow-y-auto">{children}</main>
+          <BottomNav />
+        </div>
+        <ChatWidget />
       </div>
     </AuthContext.Provider>
   );

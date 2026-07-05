@@ -31,8 +31,9 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <div className="bg-brand-gradient flex flex-col items-center rounded-b-card px-6 pb-12 pt-20 text-white shadow-card">
+    <div className="flex min-h-screen flex-col md:min-h-screen md:items-center md:justify-center md:bg-mint-bg">
+      <div className="flex flex-col md:mx-auto md:w-full md:max-w-sm md:overflow-hidden md:rounded-card md:shadow-card">
+      <div className="bg-brand-gradient flex flex-col items-center rounded-b-card px-6 pb-12 pt-20 text-white shadow-card md:rounded-none md:pt-12 md:shadow-none">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/15">
           <Wallet className="h-8 w-8" />
         </div>
@@ -42,7 +43,7 @@ export default function RegisterPage() {
 
       <form
         onSubmit={handleSubmit}
-        className="mx-5 -mt-6 rounded-card bg-white p-6 shadow-card"
+        className="mx-5 -mt-6 rounded-card bg-white p-6 shadow-card md:mx-0 md:mt-0 md:rounded-none md:shadow-none"
       >
         <label className="mb-1 block text-sm font-semibold text-brand-900">
           Username
@@ -106,6 +107,7 @@ export default function RegisterPage() {
           </Link>
         </p>
       </form>
+      </div>
     </div>
   );
 }

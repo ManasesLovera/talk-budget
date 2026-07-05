@@ -78,16 +78,17 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="px-4 py-4">
+    <div className="px-4 py-4 md:mx-auto md:max-w-5xl md:px-8 md:py-6">
       <button
         onClick={() => router.back()}
-        className="mb-4 flex items-center gap-1 text-sm font-semibold text-brand-600"
+        className="mb-4 flex items-center gap-1 text-sm font-semibold text-brand-600 md:hidden"
       >
         <ArrowLeft className="h-4 w-4" /> Back
       </button>
 
+      <div className="md:grid md:grid-cols-2 md:items-start md:gap-6">
       {/* Profile */}
-      <section className="mb-6 rounded-card bg-white p-4 shadow-card">
+      <section className="mb-6 rounded-card bg-white p-4 shadow-card md:mb-0">
         <h2 className="mb-3 font-bold text-brand-900">Profile</h2>
         <form onSubmit={handleProfileSubmit} className="space-y-3">
           <div>
@@ -138,7 +139,7 @@ export default function SettingsPage() {
       </section>
 
       {/* Categories */}
-      <section className="mb-6 rounded-card bg-white p-4 shadow-card">
+      <section className="mb-6 rounded-card bg-white p-4 shadow-card md:mb-0">
         <h2 className="mb-3 font-bold text-brand-900">Categories</h2>
 
         <div className="mb-3 space-y-2">
@@ -193,10 +194,11 @@ export default function SettingsPage() {
         </form>
         {catError && <p className="mt-2 text-xs font-medium text-rose-500">{catError}</p>}
       </section>
+      </div>
 
       <button
         onClick={handleLogout}
-        className="flex w-full items-center justify-center gap-2 rounded-card bg-white py-3 font-bold text-rose-500 shadow-card"
+        className="flex w-full items-center justify-center gap-2 rounded-card bg-white py-3 font-bold text-rose-500 shadow-card md:mx-auto md:mt-6 md:max-w-xl"
       >
         <LogOut className="h-4 w-4" /> Log out
       </button>
