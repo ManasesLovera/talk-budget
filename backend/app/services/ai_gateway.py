@@ -1,8 +1,9 @@
 """AI Agent Gateway.
 
 Conversational engine with full read/write access to the user's own data
-(wallets, categories, transactions) via SQLAlchemy tool-calling, backed by
-the OpenCode API (OpenAI-compatible) using the `deepseek-v4-flash` model.
+(wallets, categories, transactions) via SQLAlchemy tool-calling. Supports two
+OpenAI-compatible providers — OpenCode and Ollama — selected via AI_PROVIDER,
+with the other provider used as an automatic fallback.
 """
 
 from __future__ import annotations
@@ -130,22 +131,50 @@ otherwise.
 """
 
 
+PROVIDER_CONFIGS = {
+    "opencode": {
+        "api_key": lambda: settings.OPENCODE_API_KEY,
+        "base_url": lambda: settings.OPENCODE_BASE_URL,
+        "model": lambda: settings.OPENCODE_MODEL,
+    },
+    "ollama": {
+        "api_key": lambda: settings.OLLAMA_API_KEY,
+        "base_url": lambda: settings.OLLAMA_BASE_URL,
+        "model": lambda: settings.OLLAMA_MODEL,
+    },
+}
+
+
 class AIGateway:
-    """Conversational engine gateway backed by the OpenCode API."""
+    """Conversational engine gateway with automatic provider fallback.
+
+    AI_PROVIDER selects the primary provider ("opencode" or "ollama"); the
+    other configured provider is tried automatically if the primary is
+    unconfigured or its request fails.
+    """
 
     def __init__(self, db: Session, user: User) -> None:
         self.db = db
         self.user = user
-        self.api_key = settings.OPENCODE_API_KEY
-        self.base_url = settings.OPENCODE_BASE_URL
-        self.model = settings.AI_MODEL
+
+        primary = settings.AI_PROVIDER if settings.AI_PROVIDER in PROVIDER_CONFIGS else "opencode"
+        fallback = "ollama" if primary == "opencode" else "opencode"
+        self.provider_order = [primary, fallback]
+
+    def _provider_config(self, provider: str) -> dict:
+        cfg = PROVIDER_CONFIGS[provider]
+        return {
+            "api_key": cfg["api_key"](),
+            "base_url": cfg["base_url"](),
+            "model": cfg["model"](),
+        }
 
     @property
     def is_configured(self) -> bool:
-        return bool(self.api_key)
+        return any(self._provider_config(p)["api_key"] for p in self.provider_order)
 
-    def _client(self) -> OpenAI:
-        return OpenAI(api_key=self.api_key, base_url=self.base_url)
+    def _client(self, base_url: str, api_key: str) -> OpenAI:
+        return OpenAI(api_key=api_key, base_url=base_url)
 
     # --- tool implementations -------------------------------------------------
 
@@ -334,16 +363,56 @@ class AIGateway:
 
     # --- chat loop --------------------------------------------------------
 
+    def _run_tool_loop(self, client: OpenAI, model: str, conversation: list[dict]) -> str:
+        """Run the bounded tool-calling loop against a single provider client.
+
+        Mutates `conversation` in place so a fallback retry starts fresh via a copy.
+        """
+        for _ in range(MAX_TOOL_ROUNDS):
+            response = client.chat.completions.create(
+                model=model,
+                messages=conversation,
+                tools=TOOLS,
+                tool_choice="auto",
+            )
+            choice = response.choices[0].message
+            tool_calls = choice.tool_calls or []
+
+            if not tool_calls:
+                return choice.content or "..."
+
+            conversation.append(
+                {
+                    "role": "assistant",
+                    "content": choice.content or "",
+                    "tool_calls": [tc.model_dump() for tc in tool_calls],
+                }
+            )
+            for tool_call in tool_calls:
+                args = json.loads(tool_call.function.arguments or "{}")
+                result = self._dispatch_tool(tool_call.function.name, args)
+                conversation.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": json.dumps(result),
+                    }
+                )
+
+        return "I looked into that but couldn't wrap it up — try rephrasing?"
+
     def chat(self, messages: list[dict]) -> str:
         """Run a tool-calling chat loop and return the final assistant reply.
 
         `messages` is the prior conversation as [{"role": "user"|"assistant", "content": str}, ...]
-        (system prompt is injected automatically).
+        (system prompt is injected automatically). Tries the primary provider
+        first and falls back to the other configured provider if the primary
+        is unconfigured or its request fails.
         """
         if not self.is_configured:
             return (
                 "The AI assistant isn't configured yet — ask your admin to set "
-                "OPENCODE_API_KEY in the backend environment."
+                "OPENCODE_API_KEY and/or OLLAMA_API_KEY in the backend environment."
             )
 
         system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
@@ -351,45 +420,22 @@ class AIGateway:
             username=self.user.username,
             currency="USD",
         )
-        conversation: list[dict] = [{"role": "system", "content": system_prompt}, *messages]
+        base_conversation: list[dict] = [{"role": "system", "content": system_prompt}, *messages]
 
-        client = self._client()
-        try:
-            for _ in range(MAX_TOOL_ROUNDS):
-                response = client.chat.completions.create(
-                    model=self.model,
-                    messages=conversation,
-                    tools=TOOLS,
-                    tool_choice="auto",
-                )
-                choice = response.choices[0].message
-                tool_calls = choice.tool_calls or []
+        last_error: Exception | None = None
+        for provider in self.provider_order:
+            config = self._provider_config(provider)
+            if not config["api_key"]:
+                continue
+            client = self._client(config["base_url"], config["api_key"])
+            conversation = [dict(m) for m in base_conversation]
+            try:
+                return self._run_tool_loop(client, config["model"], conversation)
+            except Exception as exc:  # noqa: BLE001 - try the next provider
+                logger.exception("AI gateway chat failed via provider '%s'", provider)
+                last_error = exc
 
-                if not tool_calls:
-                    return choice.content or "..."
-
-                conversation.append(
-                    {
-                        "role": "assistant",
-                        "content": choice.content or "",
-                        "tool_calls": [tc.model_dump() for tc in tool_calls],
-                    }
-                )
-                for tool_call in tool_calls:
-                    args = json.loads(tool_call.function.arguments or "{}")
-                    result = self._dispatch_tool(tool_call.function.name, args)
-                    conversation.append(
-                        {
-                            "role": "tool",
-                            "tool_call_id": tool_call.id,
-                            "content": json.dumps(result),
-                        }
-                    )
-
-            return "I looked into that but couldn't wrap it up — try rephrasing?"
-        except Exception as exc:  # noqa: BLE001 - surfaced to the chat UI
-            logger.exception("AI gateway chat failed")
-            return f"Sorry, I hit an error talking to the AI service: {exc}"
+        return f"Sorry, I hit an error talking to the AI service: {last_error}"
 
 
 def get_ai_gateway(db: Session, user: User) -> AIGateway:

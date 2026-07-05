@@ -68,7 +68,7 @@ JWT-based (`python-jose`), OAuth2 password flow. Two roles: `admin` and `user`.
 
 ### AI Agent Gateway (`backend/app/services/ai_gateway.py`)
 
-This is **not** OpenAI or Anthropic — it talks to the **OpenCode API** (OpenAI-compatible surface, via the `openai` Python SDK) using model `deepseek-v4-flash`. Config keys: `OPENCODE_API_KEY`, `OPENCODE_BASE_URL`, `AI_MODEL` (the base URL and model are pinned in `docker-compose.yml` so they can't drift from `.env`).
+This is **not** OpenAI or Anthropic — it talks to OpenAI-compatible providers via the `openai` Python SDK. Two providers are supported: **OpenCode** (model `deepseek-v4-flash`) and **Ollama** (model `gemma4:31b-cloud`). `AI_PROVIDER` selects the primary ("opencode" or "ollama"); the other provider is used as an automatic fallback if it has an API key configured (and the primary is unconfigured or its request fails). Config keys: `AI_PROVIDER`, `OPENCODE_API_KEY`/`OPENCODE_BASE_URL`/`OPENCODE_MODEL`, `OLLAMA_API_KEY`/`OLLAMA_BASE_URL`/`OLLAMA_MODEL` (base URLs and models are pinned in `docker-compose.yml` so they can't drift from `.env`).
 
 - `AIGateway.chat()` runs a bounded tool-calling loop (`MAX_TOOL_ROUNDS = 4`) against the user's own financial data.
 - Tools are plain Python methods dispatched via `_dispatch_tool`, each scoped to `self.user.id`: `list_transactions`, `create_transaction`, `create_category`, `list_categories`, `list_wallets`. Add new capabilities by adding a function to `TOOLS` and a matching `_tool_*` handler + dispatch entry.

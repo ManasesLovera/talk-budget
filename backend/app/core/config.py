@@ -34,10 +34,18 @@ class Settings(BaseSettings):
     ADMIN_PASSWORD: str = "admin123"
     ADMIN_EMAIL: str = "admin@talkbudget.com"
 
-    # AI Agent Gateway — OpenCode API (OpenAI-compatible)
+    # AI Agent Gateway — supports two OpenAI-compatible providers: "opencode" and
+    # "ollama". AI_PROVIDER picks the primary; the other is used as a fallback
+    # if the primary is unconfigured or its request fails.
+    AI_PROVIDER: str = "opencode"
+
     OPENCODE_API_KEY: str = ""
     OPENCODE_BASE_URL: str = "https://opencode.ai/zen/go/v1"
-    AI_MODEL: str = "deepseek-v4-flash"
+    OPENCODE_MODEL: str = "deepseek-v4-flash"
+
+    OLLAMA_API_KEY: str = ""
+    OLLAMA_BASE_URL: str = "https://ollama.com/v1"
+    OLLAMA_MODEL: str = "gemma4:31b-cloud"
 
     @property
     def DATABASE_URL(self) -> str:

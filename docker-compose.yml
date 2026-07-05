@@ -43,9 +43,11 @@ services:
       REDIS_HOST: redis-cache
       REDIS_PORT: 6379
       # Non-secret AI gateway config pinned here (overrides .env) so it can't
-      # drift out of sync with OpenCode's actual endpoint/model naming.
+      # drift out of sync with the providers' actual endpoint/model naming.
       OPENCODE_BASE_URL: https://opencode.ai/zen/go/v1
-      AI_MODEL: deepseek-v4-flash
+      OPENCODE_MODEL: deepseek-v4-flash
+      OLLAMA_BASE_URL: https://ollama.com/v1
+      OLLAMA_MODEL: gemma4:31b-cloud
     depends_on:
       postgres-db:
         condition: service_healthy
