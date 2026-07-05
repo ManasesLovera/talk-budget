@@ -15,6 +15,7 @@ import {
   type TransactionType,
   type Wallet,
 } from "@/lib/api";
+import { useCurrency } from "@/lib/currency-context";
 
 const LOCALES: Record<Language, string> = { en: "en-US", es: "es-ES" };
 
@@ -26,6 +27,7 @@ function formatDate(iso: string, language: Language): string {
 }
 
 export default function TransactionsPage() {
+  const { symbol } = useCurrency();
   const { language, t: tr } = useLanguage();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -223,7 +225,7 @@ export default function TransactionsPage() {
                     t.type === "income" ? "text-brand-600" : "text-rose-500"
                   }`}
                 >
-                  {t.type === "income" ? "+" : "-"}${Math.abs(parseFloat(t.amount)).toFixed(2)}
+                  {t.type === "income" ? "+" : "-"}{symbol}{Math.abs(parseFloat(t.amount)).toFixed(2)}
                 </span>
                 <button
                   onClick={() => handleDelete(t.id)}

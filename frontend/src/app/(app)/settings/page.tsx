@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Globe, LogOut, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { useCurrency, type CurrencyCode } from "@/lib/currency-context";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { LANGUAGE_LABELS, type Language } from "@/lib/i18n/translations";
 import {
@@ -15,9 +16,15 @@ import {
   type Category,
 } from "@/lib/api";
 
+const CURRENCY_OPTIONS: { value: CurrencyCode; label: string }[] = [
+  { value: "USD", label: "US$ (US Dollar)" },
+  { value: "DOP", label: "RD$ (Dominican Peso)" },
+];
+
 export default function SettingsPage() {
   const router = useRouter();
   const { user, refreshUser } = useAuth();
+  const { currency, setCurrency } = useCurrency();
   const { language, setLanguage, t } = useLanguage();
 
   const [username, setUsername] = useState(user.username);
@@ -102,6 +109,7 @@ export default function SettingsPage() {
             <input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              data-testid="settings-username"
               className="w-full rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-sm outline-none"
             />
           </div>
@@ -142,16 +150,20 @@ export default function SettingsPage() {
         </form>
       </section>
 
-      {/* Language */}
+      {/* Preferences */}
       <section className="mb-6 rounded-card bg-white p-4 shadow-card md:mb-0">
         <h2 className="mb-3 flex items-center gap-2 font-bold text-brand-900">
-          <Globe className="h-4 w-4" /> {t.settings.language}
+          <Globe className="h-4 w-4" /> {t.settings.preferences}
         </h2>
-        <div className="flex gap-2">
+        <label className="mb-1 block text-xs font-semibold text-slate-500">
+          {t.settings.language}
+        </label>
+        <div className="mb-3 flex gap-2">
           {(Object.keys(LANGUAGE_LABELS) as Language[]).map((lang) => (
             <button
               key={lang}
               onClick={() => setLanguage(lang)}
+              data-testid={`language-option-${lang}`}
               className={`flex-1 rounded-xl px-3 py-2.5 text-sm font-semibold ${
                 language === lang
                   ? "bg-brand-gradient text-white"
@@ -162,6 +174,21 @@ export default function SettingsPage() {
             </button>
           ))}
         </div>
+        <label className="mb-1 block text-xs font-semibold text-slate-500">
+          {t.settings.currency}
+        </label>
+        <select
+          value={currency}
+          onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
+          data-testid="currency-select"
+          className="w-full rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-sm outline-none"
+        >
+          {CURRENCY_OPTIONS.map((c) => (
+            <option key={c.value} value={c.value}>
+              {c.label}
+            </option>
+          ))}
+        </select>
       </section>
       </div>
 

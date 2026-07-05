@@ -46,6 +46,8 @@ const en = {
     newCategoryPlaceholder: "New category name",
     createCategoryFailed: "Failed to create category",
     language: "Language",
+    preferences: "Preferences",
+    currency: "Currency",
     logout: "Log out",
   },
   login: {
@@ -183,6 +185,8 @@ const es: typeof en = {
     newCategoryPlaceholder: "Nombre de la nueva categoría",
     createCategoryFailed: "Error al crear la categoría",
     language: "Idioma",
+    preferences: "Preferencias",
+    currency: "Moneda",
     logout: "Cerrar sesión",
   },
   login: {
