@@ -110,6 +110,7 @@ export interface Wallet {
   balance: string;
   currency: string;
   owner_id: number;
+  category_id?: number | null;
 }
 
 export interface WalletCreatePayload {
@@ -117,6 +118,13 @@ export interface WalletCreatePayload {
   type: string;
   balance?: number;
   currency?: string;
+  category_id?: number | null;
+}
+
+export interface WalletUpdatePayload {
+  name?: string;
+  balance?: number;
+  category_id?: number | null;
 }
 
 export function getWallets(): Promise<Wallet[]> {
@@ -126,6 +134,16 @@ export function getWallets(): Promise<Wallet[]> {
 export function createWallet(payload: WalletCreatePayload): Promise<Wallet> {
   return request<Wallet>("/wallets", {
     method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateWallet(
+  id: number,
+  payload: WalletUpdatePayload
+): Promise<Wallet> {
+  return request<Wallet>(`/wallets/${id}`, {
+    method: "PUT",
     body: JSON.stringify(payload),
   });
 }

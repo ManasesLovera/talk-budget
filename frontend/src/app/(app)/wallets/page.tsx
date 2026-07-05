@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CreditCard, Landmark, PiggyBank, Plus, TrendingUp, Wallet as WalletIcon } from "lucide-react";
-import { createWallet, getWallets, type Wallet } from "@/lib/api";
+import { CreditCard, Edit2, Landmark, PiggyBank, Plus, TrendingUp, Wallet as WalletIcon, X } from "lucide-react";
+import { createWallet, getWallets, updateWallet, getCategories, type Wallet, type Category } from "@/lib/api";
 import { useCurrency } from "@/lib/currency-context";
 import { useLanguage } from "@/lib/i18n/language-context";
 
@@ -27,17 +27,21 @@ export default function WalletsPage() {
     { value: "loan", label: t.wallets.loan },
   ];
   const [wallets, setWallets] = useState<Wallet[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [name, setName] = useState("");
   const [type, setType] = useState("cash");
   const [balance, setBalance] = useState("0");
+  const [categoryId, setCategoryId] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
     setWallets(await getWallets());
+    setCategories(await getCategories());
     setLoading(false);
   }
 
@@ -45,20 +49,55 @@ export default function WalletsPage() {
     load();
   }, []);
 
+  function openEdit(wallet: Wallet) {
+    setEditingId(wallet.id);
+    setName(wallet.name);
+    setBalance(wallet.balance);
+    setCategoryId(wallet.category_id ? String(wallet.category_id) : "");
+    setFormOpen(true);
+    setError(null);
+  }
+
+  function resetForm() {
+    setEditingId(null);
+    setName("");
+    setType("cash");
+    setBalance("0");
+    setCategoryId("");
+    setError(null);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name) return;
     setSubmitting(true);
     setError(null);
     try {
-      await createWallet({ name, type, balance: parseFloat(balance) || 0 });
-      setName("");
-      setType("cash");
-      setBalance("0");
+      if (editingId) {
+        await updateWallet(editingId, {
+          name,
+          balance: parseFloat(balance) || 0,
+          category_id: categoryId ? parseInt(categoryId) : null,
+        });
+      } else {
+        await createWallet({
+          name,
+          type,
+          balance: parseFloat(balance) || 0,
+          category_id: categoryId ? parseInt(categoryId) : null,
+        });
+      }
+      resetForm();
       setFormOpen(false);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t.wallets.createFailed);
+      setError(
+        err instanceof Error
+          ? err.message
+          : editingId
+            ? t.wallets.saveFailed
+            : t.wallets.createFailed
+      );
     } finally {
       setSubmitting(false);
     }
@@ -70,7 +109,10 @@ export default function WalletsPage() {
   return (
     <div className="px-4 py-4 md:mx-auto md:max-w-5xl md:px-8 md:py-6">
       <button
-        onClick={() => setFormOpen((v) => !v)}
+        onClick={() => {
+          resetForm();
+          setFormOpen((v) => !v);
+        }}
         className="mb-4 flex w-full items-center justify-center gap-2 rounded-card bg-white py-3 font-bold text-brand-600 shadow-card md:max-w-xl"
       >
         <Plus className="h-4 w-4" /> {t.wallets.addWalletOrLoan}
@@ -81,6 +123,22 @@ export default function WalletsPage() {
           onSubmit={handleSubmit}
           className="mb-4 space-y-3 rounded-card bg-white p-4 shadow-card md:max-w-xl"
         >
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-brand-900">
+              {editingId ? t.wallets.editWallet : t.wallets.newWallet}
+            </h3>
+            <button
+              type="button"
+              onClick={() => {
+                setFormOpen(false);
+                resetForm();
+              }}
+              className="text-slate-400 hover:text-slate-600"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
           <input
             type="text"
             placeholder={t.wallets.namePlaceholder}
@@ -89,25 +147,47 @@ export default function WalletsPage() {
             required
             className="w-full rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-sm outline-none"
           />
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            className="w-full rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-sm outline-none"
-          >
-            {WALLET_TYPES.map((wt) => (
-              <option key={wt.value} value={wt.value}>
-                {wt.label}
-              </option>
-            ))}
-          </select>
+
+          {!editingId && (
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              className="w-full rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-sm outline-none"
+            >
+              {WALLET_TYPES.map((wt) => (
+                <option key={wt.value} value={wt.value}>
+                  {wt.label}
+                </option>
+              ))}
+            </select>
+          )}
+
           <input
             type="number"
             step="0.01"
-            placeholder={t.wallets.startingBalancePlaceholder}
+            placeholder={
+              editingId
+                ? t.wallets.balancePlaceholder
+                : t.wallets.startingBalancePlaceholder
+            }
             value={balance}
             onChange={(e) => setBalance(e.target.value)}
             className="w-full rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-sm outline-none"
           />
+
+          <select
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            className="w-full rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-sm outline-none"
+          >
+            <option value="">{t.wallets.noCategory}</option>
+            {categories.map((c) => (
+              <option key={c.id} value={String(c.id)}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+
           {error && <p className="text-xs font-medium text-rose-500">{error}</p>}
           <button
             type="submit"
@@ -138,29 +218,41 @@ export default function WalletsPage() {
                 const typeLabel =
                   WALLET_TYPES.find((wt) => wt.value === w.type)?.label ??
                   w.type.replace("_", " ");
+                const categoryName = w.category_id
+                  ? categories.find((c) => c.id === w.category_id)?.name
+                  : undefined;
                 return (
                   <div
                     key={w.id}
                     className="flex items-center justify-between rounded-card bg-white px-4 py-3.5 shadow-card"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-1">
                       <div className="rounded-full bg-brand-50 p-2 text-brand-600">
                         <Icon className="h-4 w-4" />
                       </div>
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <p className="font-semibold text-brand-900">{w.name}</p>
                         <p className="text-xs capitalize text-slate-400">
                           {typeLabel}
+                          {categoryName && <> • {categoryName}</>}
                         </p>
                       </div>
                     </div>
-                    <span
-                      className={`font-bold ${
-                        parseFloat(w.balance) < 0 ? "text-rose-500" : "text-brand-900"
-                      }`}
-                    >
-                      {symbol}{parseFloat(w.balance).toLocaleString()}
-                    </span>
+                    <div className="flex items-center gap-2 ml-2">
+                      <span
+                        className={`font-bold whitespace-nowrap ${
+                          parseFloat(w.balance) < 0 ? "text-rose-500" : "text-brand-900"
+                        }`}
+                      >
+                        {symbol}{parseFloat(w.balance).toLocaleString()}
+                      </span>
+                      <button
+                        onClick={() => openEdit(w)}
+                        className="text-slate-400 hover:text-brand-600 p-1"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -179,15 +271,23 @@ export default function WalletsPage() {
                   key={w.id}
                   className="flex items-center justify-between rounded-card bg-white px-4 py-3.5 shadow-card"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-1">
                     <div className="rounded-full bg-rose-50 p-2 text-rose-500">
                       <Landmark className="h-4 w-4" />
                     </div>
                     <p className="font-semibold text-brand-900">{w.name}</p>
                   </div>
-                  <span className="font-bold text-rose-500">
-                    {symbol}{Math.abs(parseFloat(w.balance)).toLocaleString()}
-                  </span>
+                  <div className="flex items-center gap-2 ml-2">
+                    <span className="font-bold text-rose-500 whitespace-nowrap">
+                      {symbol}{Math.abs(parseFloat(w.balance)).toLocaleString()}
+                    </span>
+                    <button
+                      onClick={() => openEdit(w)}
+                      className="text-slate-400 hover:text-brand-600 p-1"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
               </div>
