@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeftRight, TrendingDown, TrendingUp } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/language-context";
 import {
@@ -40,6 +40,12 @@ export default function TransactionForm({
   const [occurredAt, setOccurredAt] = useState(nowForInput());
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!walletId && wallets[0]) {
+      setWalletId(String(wallets[0].id));
+    }
+  }, [wallets, walletId]);
 
   const typeOptions: { key: TransactionType; label: string; icon: React.ReactNode }[] = [
     { key: "expense", label: tr.transactions.expense, icon: <TrendingDown className="h-4 w-4" /> },
