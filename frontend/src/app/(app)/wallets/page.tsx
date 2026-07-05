@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { CreditCard, Landmark, PiggyBank, Plus, TrendingUp, Wallet as WalletIcon } from "lucide-react";
 import { createWallet, getWallets, type Wallet } from "@/lib/api";
+import { useCurrency } from "@/lib/currency-context";
 
 const WALLET_TYPES = [
   { value: "cash", label: "Cash" },
@@ -23,6 +24,7 @@ const ICONS: Record<string, typeof WalletIcon> = {
 };
 
 export default function WalletsPage() {
+  const { symbol } = useCurrency();
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
@@ -153,7 +155,7 @@ export default function WalletsPage() {
                         parseFloat(w.balance) < 0 ? "text-rose-500" : "text-brand-900"
                       }`}
                     >
-                      ${parseFloat(w.balance).toLocaleString()}
+                      {symbol}{parseFloat(w.balance).toLocaleString()}
                     </span>
                   </div>
                 );
@@ -180,7 +182,7 @@ export default function WalletsPage() {
                     <p className="font-semibold text-brand-900">{w.name}</p>
                   </div>
                   <span className="font-bold text-rose-500">
-                    ${Math.abs(parseFloat(w.balance)).toLocaleString()}
+                    {symbol}{Math.abs(parseFloat(w.balance)).toLocaleString()}
                   </span>
                 </div>
               ))}

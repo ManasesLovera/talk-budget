@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, LogOut, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { useCurrency, type CurrencyCode } from "@/lib/currency-context";
 import {
   clearToken,
   createCategory,
@@ -13,9 +14,15 @@ import {
   type Category,
 } from "@/lib/api";
 
+const CURRENCY_OPTIONS: { value: CurrencyCode; label: string }[] = [
+  { value: "USD", label: "US$ (US Dollar)" },
+  { value: "DOP", label: "RD$ (Dominican Peso)" },
+];
+
 export default function SettingsPage() {
   const router = useRouter();
   const { user, refreshUser } = useAuth();
+  const { currency, setCurrency } = useCurrency();
 
   const [username, setUsername] = useState(user.username);
   const [email, setEmail] = useState(user.email);
@@ -193,6 +200,25 @@ export default function SettingsPage() {
           </button>
         </form>
         {catError && <p className="mt-2 text-xs font-medium text-rose-500">{catError}</p>}
+      </section>
+
+      {/* Preferences */}
+      <section className="mb-6 rounded-card bg-white p-4 shadow-card md:mb-0">
+        <h2 className="mb-3 font-bold text-brand-900">Preferences</h2>
+        <label className="mb-1 block text-xs font-semibold text-slate-500">
+          Currency
+        </label>
+        <select
+          value={currency}
+          onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
+          className="w-full rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-sm outline-none"
+        >
+          {CURRENCY_OPTIONS.map((c) => (
+            <option key={c.value} value={c.value}>
+              {c.label}
+            </option>
+          ))}
+        </select>
       </section>
       </div>
 

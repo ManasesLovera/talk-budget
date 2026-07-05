@@ -13,6 +13,7 @@ import {
   type Transaction,
   type Wallet,
 } from "@/lib/api";
+import { useCurrency } from "@/lib/currency-context";
 
 function monthBounds(): { start: string; end: string; label: string } {
   const now = new Date();
@@ -32,6 +33,7 @@ function money(n: number): string {
 }
 
 export default function DashboardPage() {
+  const { symbol } = useCurrency();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [wallets, setWallets] = useState<Wallet[]>([]);
@@ -109,13 +111,13 @@ export default function DashboardPage() {
           <div>
             <p className="text-xs text-slate-400">Opening balance</p>
             <p className="mt-1 font-bold text-brand-900">
-              ${openingBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+              {symbol}{openingBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
             </p>
           </div>
           <div>
             <p className="text-xs text-slate-400">Ending balance</p>
             <p className="mt-1 font-bold text-brand-900">
-              ${endingBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+              {symbol}{endingBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
             </p>
           </div>
         </div>
@@ -137,7 +139,7 @@ export default function DashboardPage() {
               <DonutChart
                 segments={segments}
                 centerLabel="Expense"
-                centerValue={`$${money(expenses)}`}
+                centerValue={`${symbol}${money(expenses)}`}
               />
               <div className="flex-1 space-y-2.5">
                 {segments.map((s) => (
@@ -170,7 +172,7 @@ export default function DashboardPage() {
                           />
                           {name}
                         </span>
-                        <span className="font-semibold text-slate-500">${money(amount)}</span>
+                        <span className="font-semibold text-slate-500">{symbol}{money(amount)}</span>
                       </div>
                     ))}
                   </div>
@@ -200,18 +202,18 @@ export default function DashboardPage() {
         </div>
         <div className="flex items-center justify-between">
           <span className="text-brand-900">Income</span>
-          <span className="font-bold text-brand-500">${money(income)}</span>
+          <span className="font-bold text-brand-500">{symbol}{money(income)}</span>
         </div>
         <div className="mt-2 flex items-center justify-between">
           <span className="text-brand-900">Expense</span>
-          <span className="font-bold text-brand-900">-${money(expenses)}</span>
+          <span className="font-bold text-brand-900">-{symbol}{money(expenses)}</span>
         </div>
       </Link>
 
       {/* Net worth */}
       <section>
         <h2 className="mb-3 px-1 text-lg font-extrabold text-brand-900">
-          Net worth · ${money(netWorth)}
+          Net worth · {symbol}{money(netWorth)}
         </h2>
         <div className="space-y-3">
           {wallets.length === 0 ? (

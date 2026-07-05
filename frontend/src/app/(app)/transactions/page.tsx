@@ -13,6 +13,7 @@ import {
   type TransactionType,
   type Wallet,
 } from "@/lib/api";
+import { useCurrency } from "@/lib/currency-context";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, {
@@ -22,6 +23,7 @@ function formatDate(iso: string): string {
 }
 
 export default function TransactionsPage() {
+  const { symbol } = useCurrency();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [wallets, setWallets] = useState<Wallet[]>([]);
@@ -218,7 +220,7 @@ export default function TransactionsPage() {
                     t.type === "income" ? "text-brand-600" : "text-rose-500"
                   }`}
                 >
-                  {t.type === "income" ? "+" : "-"}${Math.abs(parseFloat(t.amount)).toFixed(2)}
+                  {t.type === "income" ? "+" : "-"}{symbol}{Math.abs(parseFloat(t.amount)).toFixed(2)}
                 </span>
                 <button
                   onClick={() => handleDelete(t.id)}
