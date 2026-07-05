@@ -78,7 +78,7 @@ export default function ChatPanel() {
   }
 
   return (
-    <div className="flex h-full flex-col px-4">
+    <div className="flex h-full min-h-0 flex-1 flex-col px-4">
       <div className="flex items-center justify-between py-2">
         <button
           onClick={newConversation}

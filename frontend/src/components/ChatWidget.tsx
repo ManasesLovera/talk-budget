@@ -21,7 +21,7 @@ export default function ChatWidget() {
               <X className="h-4 w-4" />
             </button>
           </div>
-          <div className="min-h-0 flex-1">
+          <div className="flex min-h-0 flex-1 flex-col">
             <ChatPanel />
           </div>
         </div>
