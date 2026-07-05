@@ -93,5 +93,5 @@ This is **not** OpenAI or Anthropic — it talks to OpenAI-compatible providers 
 
 For background agents working on this project:
 - When creating pull requests, use `gh pr create` (open) instead of `gh pr create --draft`. PRs should be open/ready for review, not in draft state.
-- When UI changes are made, use the playwright MCP to take screenshots of the affected UI changes in both mobile and desktop viewports and include them in the pull request description to demonstrate responsiveness.
+- When UI changes are made, use the **Playwright MCP** (`mcp__playwright__*`) — not `claude-in-chrome` — to exercise the change and take screenshots in both mobile and desktop viewports, and include them in the pull request description to demonstrate responsiveness. Playwright is the default/first choice for this repo because it drives its own browser and doesn't depend on a Chrome extension being installed/connected; only fall back to `claude-in-chrome` if Playwright is genuinely unavailable.
 - Otherwise follow standard background session behavior (use worktrees, commit, push, open PR without asking).

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, X } from "lucide-react";
 import AccountCard from "@/components/AccountCard";
 import DonutChart from "@/components/DonutChart";
 import { useLanguage } from "@/lib/i18n/language-context";
@@ -17,13 +17,45 @@ import {
 } from "@/lib/api";
 import { useCurrency } from "@/lib/currency-context";
 
+type DateFilter = "today" | "month" | "year" | "custom";
+
 const LOCALES: Record<Language, string> = { en: "en-US", es: "es-ES" };
 
-function monthBounds(language: Language): { start: string; end: string; label: string } {
+function getTodayBounds(language: Language): { start: string; end: string; label: string } {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+  const label = now.toLocaleDateString(LOCALES[language], { month: "short", day: "numeric", year: "numeric" });
+  return { start: start.toISOString(), end: end.toISOString(), label };
+}
+
+function getMonthBounds(language: Language): { start: string; end: string; label: string } {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), 1);
   const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
   const label = now.toLocaleDateString(LOCALES[language], { month: "long", year: "numeric" });
+  return { start: start.toISOString(), end: end.toISOString(), label };
+}
+
+function getYearBounds(): { start: string; end: string; label: string } {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 1);
+  const end = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
+  const label = now.getFullYear().toString();
+  return { start: start.toISOString(), end: end.toISOString(), label };
+}
+
+function getCustomBounds(
+  startDate: string,
+  endDate: string,
+  language: Language,
+): { start: string; end: string; label: string } {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  end.setHours(23, 59, 59);
+  const startLabel = start.toLocaleDateString(LOCALES[language], { month: "short", day: "numeric" });
+  const endLabel = end.toLocaleDateString(LOCALES[language], { month: "short", day: "numeric", year: "numeric" });
+  const label = `${startLabel} - ${endLabel}`;
   return { start: start.toISOString(), end: end.toISOString(), label };
 }
 
@@ -44,9 +76,30 @@ export default function DashboardPage() {
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [loading, setLoading] = useState(true);
   const [showMore, setShowMore] = useState(false);
-  const { start, end, label } = monthBounds(language);
+  const [dateFilter, setDateFilter] = useState<DateFilter>("month");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+
+  const getDateBounds = () => {
+    switch (dateFilter) {
+      case "today":
+        return getTodayBounds(language);
+      case "year":
+        return getYearBounds();
+      case "custom":
+        return customStart && customEnd
+          ? getCustomBounds(customStart, customEnd, language)
+          : getMonthBounds(language);
+      case "month":
+      default:
+        return getMonthBounds(language);
+    }
+  };
+
+  const { start, end, label } = getDateBounds();
 
   useEffect(() => {
+    setLoading(true);
     Promise.all([
       getTransactions({ start_date: start, end_date: end }),
       getCategories(),
@@ -58,7 +111,7 @@ export default function DashboardPage() {
       setLoading(false);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dateFilter, customStart, customEnd, language]);
 
   const income = transactions
     .filter((t) => t.type === "income")
@@ -97,8 +150,61 @@ export default function DashboardPage() {
     return <p className="py-8 text-center text-sm text-slate-400">{tr.common.loading}</p>;
   }
 
+  const filterOptions: { key: DateFilter; label: string }[] = [
+    { key: "today", label: tr.dashboard.filterToday },
+    { key: "month", label: tr.dashboard.filterMonth },
+    { key: "year", label: tr.dashboard.filterYear },
+    { key: "custom", label: tr.dashboard.filterCustom },
+  ];
+
   return (
     <div className="space-y-4 px-4 py-4 md:mx-auto md:max-w-5xl md:px-8 md:py-6">
+      <div className="flex flex-wrap items-center gap-2">
+        {filterOptions.map((opt) => (
+          <button
+            key={opt.key}
+            onClick={() => setDateFilter(opt.key)}
+            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+              dateFilter === opt.key
+                ? "bg-brand-600 text-white"
+                : "bg-white text-slate-500 shadow-card"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      {dateFilter === "custom" && (
+        <div className="flex flex-wrap items-center gap-2 rounded-card bg-white p-3 shadow-card">
+          <input
+            type="date"
+            value={customStart}
+            onChange={(e) => setCustomStart(e.target.value)}
+            className="rounded-lg border border-brand-50 px-2 py-1 text-sm text-brand-900"
+          />
+          <span className="text-sm text-slate-400">{tr.dashboard.filterTo}</span>
+          <input
+            type="date"
+            value={customEnd}
+            onChange={(e) => setCustomEnd(e.target.value)}
+            className="rounded-lg border border-brand-50 px-2 py-1 text-sm text-brand-900"
+          />
+          {(customStart || customEnd) && (
+            <button
+              onClick={() => {
+                setCustomStart("");
+                setCustomEnd("");
+              }}
+              className="ml-auto flex items-center gap-1 text-xs font-semibold text-slate-400"
+            >
+              <X className="h-3.5 w-3.5" />
+              {tr.dashboard.filterClear}
+            </button>
+          )}
+        </div>
+      )}
+
       <p className="px-1 text-sm font-semibold text-slate-400">{label}</p>
 
       <div className="space-y-4 md:grid md:grid-cols-2 md:gap-5 md:space-y-0">
