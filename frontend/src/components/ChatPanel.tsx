@@ -5,16 +5,12 @@ import { Send, Trash2, Plus, History, MessageSquare } from "lucide-react";
 import { sendChatMessage, type ChatMessage } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useChatHistory } from "@/lib/use-chat-history";
-
-const SUGGESTIONS = [
-  "What did I spend this week?",
-  "Add a $12 coffee expense",
-  "Create a category called Travel",
-  "How much cash do I have?",
-];
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export default function ChatPanel() {
   const { user } = useAuth();
+  const { t } = useLanguage();
+  const SUGGESTIONS = t.chat.suggestions;
   const {
     messages,
     setMessages,
@@ -66,7 +62,7 @@ export default function ChatPanel() {
         {
           role: "assistant",
           content:
-            err instanceof Error ? `Error: ${err.message}` : "Something went wrong.",
+            err instanceof Error ? `Error: ${err.message}` : t.chat.somethingWentWrong,
         },
       ]);
     } finally {
@@ -78,7 +74,7 @@ export default function ChatPanel() {
   if (!loaded) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="text-sm text-slate-400">Loading...</div>
+        <div className="text-sm text-slate-400">{t.chat.loading}</div>
       </div>
     );
   }
@@ -91,7 +87,7 @@ export default function ChatPanel() {
           className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-brand-600 hover:bg-brand-50"
         >
           <Plus className="h-3.5 w-3.5" />
-          New chat
+          {t.chat.newChat}
         </button>
         <div className="flex items-center gap-1">
           <button
@@ -105,14 +101,14 @@ export default function ChatPanel() {
             ) : (
               <History className="h-3.5 w-3.5" />
             )}
-            {showHistory ? "Back to chat" : "History"}
+            {showHistory ? t.chat.backToChat : t.chat.history}
           </button>
           <button
             onClick={() => removeConversation(conversationId)}
             className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50"
           >
             <Trash2 className="h-3.5 w-3.5" />
-            Delete
+            {t.chat.delete}
           </button>
         </div>
       </div>
@@ -120,7 +116,7 @@ export default function ChatPanel() {
       {showHistory ? (
         <div className="min-h-0 flex-1 space-y-2 overflow-y-auto py-4">
           {conversations.length === 0 ? (
-            <div className="text-sm text-slate-400">No past conversations yet.</div>
+            <div className="text-sm text-slate-400">{t.chat.noConversations}</div>
           ) : (
             conversations.map((c) => (
               <div
@@ -169,7 +165,7 @@ export default function ChatPanel() {
           {loading && (
             <div className="flex justify-start">
               <div className="rounded-2xl bg-white px-4 py-2.5 text-sm text-slate-400 shadow-sm">
-                Thinking…
+                {t.chat.thinking}
               </div>
             </div>
           )}
@@ -202,7 +198,7 @@ export default function ChatPanel() {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about your budget…"
+            placeholder={t.chat.askPlaceholder}
             className="flex-1 bg-transparent px-2 text-sm outline-none"
           />
           <button

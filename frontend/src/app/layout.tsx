@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { LanguageProvider } from "@/lib/i18n/language-context";
 
 export const metadata: Metadata = {
   title: "Talk Budget",
@@ -21,7 +22,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <div className="app-shell">{children}</div>
+        <LanguageProvider>
+          <div className="app-shell">{children}</div>
+        </LanguageProvider>
       </body>
     </html>
   );
