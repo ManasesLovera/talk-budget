@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import AccountCard from "@/components/AccountCard";
 import DonutChart from "@/components/DonutChart";
+import { useLanguage } from "@/lib/i18n/language-context";
 import {
   getCategories,
   getTransactions,
@@ -32,6 +33,7 @@ function money(n: number): string {
 }
 
 export default function DashboardPage() {
+  const { t: tr } = useLanguage();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [wallets, setWallets] = useState<Wallet[]>([]);
@@ -69,7 +71,7 @@ export default function DashboardPage() {
     .filter((t) => t.type === "expense")
     .forEach((t) => {
       const name =
-        categories.find((c) => c.id === t.category_id)?.name ?? "Uncategorized";
+        categories.find((c) => c.id === t.category_id)?.name ?? tr.dashboard.uncategorized;
       spendByCategory.set(name, (spendByCategory.get(name) ?? 0) + parseFloat(t.amount));
     });
   const ranked = Array.from(spendByCategory.entries()).sort((a, b) => b[1] - a[1]);
@@ -83,11 +85,11 @@ export default function DashboardPage() {
       value: amount,
       color: SEGMENT_COLORS[i],
     })),
-    ...(othersTotal > 0 ? [{ label: "Others", value: othersTotal, color: OTHERS_COLOR }] : []),
+    ...(othersTotal > 0 ? [{ label: tr.dashboard.others, value: othersTotal, color: OTHERS_COLOR }] : []),
   ];
 
   if (loading) {
-    return <p className="py-8 text-center text-sm text-slate-400">Loading…</p>;
+    return <p className="py-8 text-center text-sm text-slate-400">{tr.common.loading}</p>;
   }
 
   return (
@@ -102,18 +104,18 @@ export default function DashboardPage() {
         className="block rounded-card bg-white p-4 shadow-card"
       >
         <div className="mb-3 flex items-center justify-between">
-          <span className="font-bold text-brand-900">Balance</span>
+          <span className="font-bold text-brand-900">{tr.dashboard.balance}</span>
           <ChevronRight className="h-4 w-4 text-slate-300" />
         </div>
         <div className="flex gap-6">
           <div>
-            <p className="text-xs text-slate-400">Opening balance</p>
+            <p className="text-xs text-slate-400">{tr.dashboard.openingBalance}</p>
             <p className="mt-1 font-bold text-brand-900">
               ${openingBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
             </p>
           </div>
           <div>
-            <p className="text-xs text-slate-400">Ending balance</p>
+            <p className="text-xs text-slate-400">{tr.dashboard.endingBalance}</p>
             <p className="mt-1 font-bold text-brand-900">
               ${endingBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
             </p>
@@ -124,19 +126,19 @@ export default function DashboardPage() {
       {/* Expense structure */}
       <section className="rounded-card bg-white p-4 shadow-card">
         <div className="mb-4 flex items-center justify-between">
-          <span className="font-bold text-brand-900">Expense Structure</span>
+          <span className="font-bold text-brand-900">{tr.dashboard.expenseStructure}</span>
         </div>
 
         {segments.length === 0 ? (
           <p className="py-6 text-center text-sm text-slate-400">
-            No expenses yet this month.
+            {tr.dashboard.noExpenses}
           </p>
         ) : (
           <>
             <div className="flex items-center gap-5">
               <DonutChart
                 segments={segments}
-                centerLabel="Expense"
+                centerLabel={tr.dashboard.expense}
                 centerValue={`$${money(expenses)}`}
               />
               <div className="flex-1 space-y-2.5">
@@ -179,7 +181,7 @@ export default function DashboardPage() {
                   onClick={() => setShowMore((v) => !v)}
                   className="mt-3 text-xs font-semibold text-brand-600"
                 >
-                  {showMore ? "Show less" : "Show more"}
+                  {showMore ? tr.dashboard.showLess : tr.dashboard.showMore}
                 </button>
               </>
             )}
@@ -195,15 +197,15 @@ export default function DashboardPage() {
         className="block rounded-card bg-white p-4 shadow-card"
       >
         <div className="mb-3 flex items-center justify-between">
-          <span className="font-bold text-brand-900">Summary</span>
+          <span className="font-bold text-brand-900">{tr.dashboard.summary}</span>
           <ChevronRight className="h-4 w-4 text-slate-300" />
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-brand-900">Income</span>
+          <span className="text-brand-900">{tr.dashboard.income}</span>
           <span className="font-bold text-brand-500">${money(income)}</span>
         </div>
         <div className="mt-2 flex items-center justify-between">
-          <span className="text-brand-900">Expense</span>
+          <span className="text-brand-900">{tr.dashboard.expense}</span>
           <span className="font-bold text-brand-900">-${money(expenses)}</span>
         </div>
       </Link>
@@ -211,12 +213,12 @@ export default function DashboardPage() {
       {/* Net worth */}
       <section>
         <h2 className="mb-3 px-1 text-lg font-extrabold text-brand-900">
-          Net worth · ${money(netWorth)}
+          {tr.dashboard.netWorth} · ${money(netWorth)}
         </h2>
         <div className="space-y-3">
           {wallets.length === 0 ? (
             <p className="text-center text-sm text-slate-400">
-              No wallets yet — add one in the Wallets tab.
+              {tr.dashboard.noWallets}
             </p>
           ) : (
             wallets.map((w) => (

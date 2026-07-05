@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, LogOut, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Globe, LogOut, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { useLanguage } from "@/lib/i18n/language-context";
+import { LANGUAGE_LABELS, type Language } from "@/lib/i18n/translations";
 import {
   clearToken,
   createCategory,
@@ -16,6 +18,7 @@ import {
 export default function SettingsPage() {
   const router = useRouter();
   const { user, refreshUser } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
 
   const [username, setUsername] = useState(user.username);
   const [email, setEmail] = useState(user.email);
@@ -46,9 +49,9 @@ export default function SettingsPage() {
       });
       await refreshUser();
       setPassword("");
-      setProfileMsg("Profile updated.");
+      setProfileMsg(t.settings.profileUpdated);
     } catch (err) {
-      setProfileError(err instanceof Error ? err.message : "Update failed");
+      setProfileError(err instanceof Error ? err.message : t.settings.updateFailed);
     } finally {
       setProfileSaving(false);
     }
@@ -63,7 +66,7 @@ export default function SettingsPage() {
       setCategories((prev) => [...prev, created]);
       setCatName("");
     } catch (err) {
-      setCatError(err instanceof Error ? err.message : "Failed to create category");
+      setCatError(err instanceof Error ? err.message : t.settings.createCategoryFailed);
     }
   }
 
@@ -83,17 +86,17 @@ export default function SettingsPage() {
         onClick={() => router.back()}
         className="mb-4 flex items-center gap-1 text-sm font-semibold text-brand-600 md:hidden"
       >
-        <ArrowLeft className="h-4 w-4" /> Back
+        <ArrowLeft className="h-4 w-4" /> {t.common.back}
       </button>
 
       <div className="md:grid md:grid-cols-2 md:items-start md:gap-6">
       {/* Profile */}
       <section className="mb-6 rounded-card bg-white p-4 shadow-card md:mb-0">
-        <h2 className="mb-3 font-bold text-brand-900">Profile</h2>
+        <h2 className="mb-3 font-bold text-brand-900">{t.settings.profile}</h2>
         <form onSubmit={handleProfileSubmit} className="space-y-3">
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-500">
-              Username
+              {t.settings.username}
             </label>
             <input
               value={username}
@@ -103,7 +106,7 @@ export default function SettingsPage() {
           </div>
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-500">
-              Email
+              {t.settings.email}
             </label>
             <input
               type="email"
@@ -114,13 +117,13 @@ export default function SettingsPage() {
           </div>
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-500">
-              New password (optional)
+              {t.settings.newPassword}
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Leave blank to keep current password"
+              placeholder={t.settings.newPasswordPlaceholder}
               className="w-full rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-sm outline-none"
             />
           </div>
@@ -133,14 +136,14 @@ export default function SettingsPage() {
             disabled={profileSaving}
             className="bg-brand-gradient w-full rounded-xl py-2.5 font-bold text-white disabled:opacity-60"
           >
-            {profileSaving ? "Saving…" : "Save profile"}
+            {profileSaving ? t.settings.savingProfile : t.settings.saveProfile}
           </button>
         </form>
       </section>
 
       {/* Categories */}
       <section className="mb-6 rounded-card bg-white p-4 shadow-card md:mb-0">
-        <h2 className="mb-3 font-bold text-brand-900">Categories</h2>
+        <h2 className="mb-3 font-bold text-brand-900">{t.settings.categories}</h2>
 
         <div className="mb-3 space-y-2">
           {categories.map((c) => (
@@ -155,13 +158,15 @@ export default function SettingsPage() {
                 />
                 <span className="text-sm font-medium text-brand-900">{c.name}</span>
                 {c.owner_id === null && (
-                  <span className="text-[10px] uppercase text-slate-400">default</span>
+                  <span className="text-[10px] uppercase text-slate-400">
+                    {t.settings.default}
+                  </span>
                 )}
               </div>
               {c.owner_id !== null && (
                 <button
                   onClick={() => handleDeleteCategory(c.id)}
-                  aria-label="Delete category"
+                  aria-label={t.settings.deleteCategory}
                   className="text-slate-300"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -180,7 +185,7 @@ export default function SettingsPage() {
           />
           <input
             type="text"
-            placeholder="New category name"
+            placeholder={t.settings.newCategoryPlaceholder}
             value={catName}
             onChange={(e) => setCatName(e.target.value)}
             className="flex-1 rounded-xl border border-brand-100 bg-brand-50 px-3 py-2 text-sm outline-none"
@@ -194,13 +199,35 @@ export default function SettingsPage() {
         </form>
         {catError && <p className="mt-2 text-xs font-medium text-rose-500">{catError}</p>}
       </section>
+
+      {/* Language */}
+      <section className="mb-6 rounded-card bg-white p-4 shadow-card md:mb-0">
+        <h2 className="mb-3 flex items-center gap-2 font-bold text-brand-900">
+          <Globe className="h-4 w-4" /> {t.settings.language}
+        </h2>
+        <div className="flex gap-2">
+          {(Object.keys(LANGUAGE_LABELS) as Language[]).map((lang) => (
+            <button
+              key={lang}
+              onClick={() => setLanguage(lang)}
+              className={`flex-1 rounded-xl px-3 py-2.5 text-sm font-semibold ${
+                language === lang
+                  ? "bg-brand-gradient text-white"
+                  : "bg-brand-50 text-brand-700"
+              }`}
+            >
+              {LANGUAGE_LABELS[lang]}
+            </button>
+          ))}
+        </div>
+      </section>
       </div>
 
       <button
         onClick={handleLogout}
         className="flex w-full items-center justify-center gap-2 rounded-card bg-white py-3 font-bold text-rose-500 shadow-card md:mx-auto md:mt-6 md:max-w-xl"
       >
-        <LogOut className="h-4 w-4" /> Log out
+        <LogOut className="h-4 w-4" /> {t.settings.logout}
       </button>
     </div>
   );

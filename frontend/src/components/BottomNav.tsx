@@ -3,16 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bot, LayoutDashboard, Receipt, Wallet } from "lucide-react";
-
-const TABS = [
-  { href: "/", label: "Chat", icon: Bot },
-  { href: "/transactions", label: "Transactions", icon: Receipt },
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/wallets", label: "Wallets", icon: Wallet },
-];
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const { t } = useLanguage();
+
+  const TABS = [
+    { href: "/", label: t.nav.chat, icon: Bot },
+    { href: "/transactions", label: t.nav.transactions, icon: Receipt },
+    { href: "/dashboard", label: t.nav.dashboard, icon: LayoutDashboard },
+    { href: "/wallets", label: t.nav.wallets, icon: Wallet },
+  ];
 
   return (
     <nav className="flex shrink-0 border-t border-brand-100 bg-white/95 backdrop-blur md:hidden">
