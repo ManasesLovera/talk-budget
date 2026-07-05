@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /home/mlovera/dev/talk-budget && if [ -n \"$(git status --porcelain -- backend frontend)\" ]; then docker compose build fastapi-backend nextjs-frontend && docker compose up -d; fi",
+            "statusMessage": "Rebuilding containers with latest changes...",
+            "async": true,
+            "timeout": 300
+          }
+        ]
+      }
+    ]
+  }
+}
