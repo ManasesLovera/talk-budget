@@ -88,3 +88,10 @@ This is **not** OpenAI or Anthropic — it talks to OpenAI-compatible providers 
 
 - `Wallet.balance` is mutated directly (not derived) when transactions are created — see `_tool_create_transaction` in the AI gateway and the equivalent path in `api/transactions.py` for the pattern of updating wallet balance alongside transaction inserts.
 - `Category` rows with `owner_id=None` are global/shared defaults seeded once; user-created categories are scoped to `owner_id`.
+
+## Background session behavior
+
+For background agents working on this project:
+- When creating pull requests, use `gh pr create` (open) instead of `gh pr create --draft`. PRs should be open/ready for review, not in draft state.
+- When UI changes are made, use the playwright MCP to take screenshots of the affected UI changes in both mobile and desktop viewports and include them in the pull request description to demonstrate responsiveness.
+- Otherwise follow standard background session behavior (use worktrees, commit, push, open PR without asking).

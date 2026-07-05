@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, type MouseEvent } from "react";
 import { Send, Trash2, Plus, History, MessageSquare } from "lucide-react";
 import { sendChatMessage, type ChatMessage } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -44,6 +44,12 @@ export default function ChatPanel() {
   async function openConversation(id: string) {
     await switchConversation(id);
     setShowHistory(false);
+  }
+
+  async function deleteConversationFromHistory(id: string, e: MouseEvent) {
+    e.stopPropagation();
+    await removeConversation(id);
+    await refreshConversations();
   }
 
   async function send(text: string) {
@@ -117,17 +123,28 @@ export default function ChatPanel() {
             <div className="text-sm text-slate-400">No past conversations yet.</div>
           ) : (
             conversations.map((c) => (
-              <button
+              <div
                 key={c.id}
-                onClick={() => openConversation(c.id)}
-                className={`block w-full rounded-xl px-4 py-2.5 text-left text-sm shadow-sm ${
+                className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm shadow-sm ${
                   c.id === conversationId
                     ? "bg-brand-50 text-brand-900"
                     : "bg-white text-slate-700 hover:bg-brand-50"
                 }`}
               >
-                {c.title}
-              </button>
+                <button
+                  onClick={() => openConversation(c.id)}
+                  className="flex-1 truncate text-left"
+                >
+                  {c.title}
+                </button>
+                <button
+                  onClick={(e) => deleteConversationFromHistory(c.id, e)}
+                  aria-label={`Delete conversation ${c.title}`}
+                  className="shrink-0 rounded-full p-1 text-red-400 hover:bg-red-50 hover:text-red-600"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
             ))
           )}
         </div>
