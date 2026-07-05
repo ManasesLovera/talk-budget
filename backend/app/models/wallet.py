@@ -37,5 +37,7 @@ class Wallet(Base):
     owner: Mapped["User"] = relationship(back_populates="wallets")  # noqa: F821
     category: Mapped["Category | None"] = relationship()  # noqa: F821
     transactions: Mapped[list["Transaction"]] = relationship(  # noqa: F821
-        back_populates="wallet", cascade="all, delete-orphan"
+        back_populates="wallet",
+        foreign_keys="Transaction.wallet_id",
+        cascade="all, delete-orphan",
     )
