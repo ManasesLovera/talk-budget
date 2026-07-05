@@ -27,11 +27,15 @@ class Wallet(Base):
     balance: Mapped[float] = mapped_column(Numeric(14, 2), default=0, nullable=False)
     currency: Mapped[str] = mapped_column(String(3), default="USD", nullable=False)
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    category_id: Mapped[int | None] = mapped_column(
+        ForeignKey("categories.id", ondelete="SET NULL"), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
     owner: Mapped["User"] = relationship(back_populates="wallets")  # noqa: F821
+    category: Mapped["Category | None"] = relationship()  # noqa: F821
     transactions: Mapped[list["Transaction"]] = relationship(  # noqa: F821
         back_populates="wallet", cascade="all, delete-orphan"
     )
