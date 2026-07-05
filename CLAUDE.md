@@ -45,7 +45,7 @@ bun run build
 bun run lint
 ```
 
-There is no test suite configured in either backend or frontend at present.
+There is no backend test suite configured at present. The frontend has a Playwright end-to-end suite under `frontend/e2e/` (see `frontend/e2e/README.md`) covering auth, the settings currency/language switchers, and the wallets/transactions flow, run against an already-running stack (`docker compose up` or a preview container) via `npx playwright test` from `frontend/`.
 
 ## Architecture
 

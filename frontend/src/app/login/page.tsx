@@ -58,6 +58,7 @@ export default function LoginPage() {
             onChange={(e) => setUsername(e.target.value)}
             autoCapitalize="none"
             placeholder={t.login.usernamePlaceholder}
+            data-testid="login-username"
           />
         </div>
 
@@ -72,6 +73,7 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
+            data-testid="login-password"
           />
         </div>
 
@@ -83,6 +85,7 @@ export default function LoginPage() {
           type="submit"
           disabled={loading}
           className="w-full rounded-xl bg-brand-gradient py-3 font-bold text-white shadow-card transition active:scale-[0.99] disabled:opacity-60"
+          data-testid="login-submit"
         >
           {loading ? t.login.signingIn : t.login.signIn}
         </button>

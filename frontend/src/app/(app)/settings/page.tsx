@@ -109,6 +109,7 @@ export default function SettingsPage() {
             <input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              data-testid="settings-username"
               className="w-full rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-sm outline-none"
             />
           </div>
@@ -162,6 +163,7 @@ export default function SettingsPage() {
             <button
               key={lang}
               onClick={() => setLanguage(lang)}
+              data-testid={`language-option-${lang}`}
               className={`flex-1 rounded-xl px-3 py-2.5 text-sm font-semibold ${
                 language === lang
                   ? "bg-brand-gradient text-white"
@@ -178,6 +180,7 @@ export default function SettingsPage() {
         <select
           value={currency}
           onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
+          data-testid="currency-select"
           className="w-full rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-sm outline-none"
         >
           {CURRENCY_OPTIONS.map((c) => (

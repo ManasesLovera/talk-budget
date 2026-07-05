@@ -58,6 +58,7 @@ export default function RegisterPage() {
             onChange={(e) => setUsername(e.target.value)}
             autoCapitalize="none"
             placeholder={t.register.usernamePlaceholder}
+            data-testid="register-username"
           />
         </div>
 
@@ -73,6 +74,7 @@ export default function RegisterPage() {
             onChange={(e) => setEmail(e.target.value)}
             autoCapitalize="none"
             placeholder={t.register.emailPlaceholder}
+            data-testid="register-email"
           />
         </div>
 
@@ -87,6 +89,7 @@ export default function RegisterPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
+            data-testid="register-password"
           />
         </div>
 
@@ -98,6 +101,7 @@ export default function RegisterPage() {
           type="submit"
           disabled={loading}
           className="w-full rounded-xl bg-brand-gradient py-3 font-bold text-white shadow-card transition active:scale-[0.99] disabled:opacity-60"
+          data-testid="register-submit"
         >
           {loading ? t.register.creatingAccount : t.register.createAccount}
         </button>

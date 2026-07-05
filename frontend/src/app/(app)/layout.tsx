@@ -49,7 +49,7 @@ export default function AppGroupLayout({
   return (
     <AuthContext.Provider value={{ user, refreshUser }}>
       <CurrencyProvider>
-        <div className="flex h-screen overflow-hidden">
+        <div className="flex h-screen overflow-hidden" data-testid="app-shell">
           <Sidebar />
           <div className="flex flex-1 flex-col overflow-hidden">
             <TopBar />

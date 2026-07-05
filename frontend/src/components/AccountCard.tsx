@@ -17,6 +17,7 @@ export default function AccountCard({ label, amount }: AccountCardProps) {
         className={`text-lg font-bold ${
           negative ? "text-rose-500" : "text-brand-900"
         }`}
+        data-testid="account-card-balance"
       >
         {negative ? "-" : ""}{symbol}{Math.abs(amount).toLocaleString()}
       </span>
