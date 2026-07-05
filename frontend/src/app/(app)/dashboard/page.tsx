@@ -6,6 +6,7 @@ import { ChevronRight } from "lucide-react";
 import AccountCard from "@/components/AccountCard";
 import DonutChart from "@/components/DonutChart";
 import { useLanguage } from "@/lib/i18n/language-context";
+import type { Language } from "@/lib/i18n/translations";
 import {
   getCategories,
   getTransactions,
@@ -15,11 +16,13 @@ import {
   type Wallet,
 } from "@/lib/api";
 
-function monthBounds(): { start: string; end: string; label: string } {
+const LOCALES: Record<Language, string> = { en: "en-US", es: "es-ES" };
+
+function monthBounds(language: Language): { start: string; end: string; label: string } {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), 1);
   const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-  const label = now.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  const label = now.toLocaleDateString(LOCALES[language], { month: "long", year: "numeric" });
   return { start: start.toISOString(), end: end.toISOString(), label };
 }
 
@@ -33,13 +36,13 @@ function money(n: number): string {
 }
 
 export default function DashboardPage() {
-  const { t: tr } = useLanguage();
+  const { language, t: tr } = useLanguage();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [loading, setLoading] = useState(true);
   const [showMore, setShowMore] = useState(false);
-  const { start, end, label } = monthBounds();
+  const { start, end, label } = monthBounds(language);
 
   useEffect(() => {
     Promise.all([

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Trash2, TrendingDown, TrendingUp } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/language-context";
+import type { Language } from "@/lib/i18n/translations";
 import {
   createTransaction,
   deleteTransaction,
@@ -15,15 +16,17 @@ import {
   type Wallet,
 } from "@/lib/api";
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
+const LOCALES: Record<Language, string> = { en: "en-US", es: "es-ES" };
+
+function formatDate(iso: string, language: Language): string {
+  return new Date(iso).toLocaleDateString(LOCALES[language], {
     month: "short",
     day: "numeric",
   });
 }
 
 export default function TransactionsPage() {
-  const { t: tr } = useLanguage();
+  const { language, t: tr } = useLanguage();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [wallets, setWallets] = useState<Wallet[]>([]);
@@ -211,7 +214,7 @@ export default function TransactionsPage() {
                   {t.description || categoryName(t.category_id)}
                 </p>
                 <p className="text-xs text-slate-400">
-                  {categoryName(t.category_id)} · {formatDate(t.occurred_at)}
+                  {categoryName(t.category_id)} · {formatDate(t.occurred_at, language)}
                 </p>
               </div>
               <div className="flex items-center gap-3">
