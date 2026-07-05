@@ -95,3 +95,39 @@ For background agents working on this project:
 - When creating pull requests, use `gh pr create` (open) instead of `gh pr create --draft`. PRs should be open/ready for review, not in draft state.
 - When UI changes are made, use the **Playwright MCP** (`mcp__playwright__*`) — not `claude-in-chrome` — to exercise the change and take screenshots in both mobile and desktop viewports, and include them in the pull request description to demonstrate responsiveness. Playwright is the default/first choice for this repo because it drives its own browser and doesn't depend on a Chrome extension being installed/connected; only fall back to `claude-in-chrome` if Playwright is genuinely unavailable.
 - Otherwise follow standard background session behavior (use worktrees, commit, push, open PR without asking).
+
+## PR screenshots (required for all frontend changes)
+
+Every PR that touches frontend code MUST include screenshots in both mobile and desktop viewports, embedded as a table in the PR description. Follow this workflow:
+
+1. **Ensure the stack is running** (`docker compose up --build` from the repo root).
+
+2. **Run e2e tests with screenshots enabled** from `frontend/`:
+   ```bash
+   PR_SCREENSHOTS=1 npx playwright test
+   ```
+   This saves screenshots to `docs/pr-screenshots/e2e/` — one file per project per checkpoint (e.g. `desktop-modal-income-form.png`, `mobile-modal-income-form.png`).
+
+3. **If the e2e suite doesn't already exercise the new UI**, add test cases that use `maybeScreenshot(page, testInfo, "name")` at key checkpoints so the feature is captured. See `frontend/e2e/wallets-transactions.spec.ts` for examples.
+
+4. **Commit the screenshots** together with the feature changes so raw GitHub URLs are available:
+   ```bash
+   git add docs/pr-screenshots/e2e/ && git commit -m "docs: add PR screenshots"
+   ```
+
+5. **Build a markdown table** in the PR description with side-by-side desktop and mobile screenshots:
+   ```markdown
+   ## Screenshots
+
+   | Desktop | Mobile |
+   |---|---|
+   | ![desktop-feature](https://raw.githubusercontent.com/OWNER/REPO/BRANCH/docs/pr-screenshots/e2e/desktop-feature.png) | ![mobile-feature](https://raw.githubusercontent.com/OWNER/REPO/BRANCH/docs/pr-screenshots/e2e/mobile-feature.png) |
+   ```
+
+   Raw GitHub URLs follow the pattern:
+   `https://raw.githubusercontent.com/{owner}/{repo}/{branch}/docs/pr-screenshots/e2e/{project}-{name}.png`
+
+6. **Update the PR description** via the GitHub API if `gh pr edit` doesn't work reliably:
+   ```bash
+   gh api repos/{owner}/{repo}/pulls/{number} -X PATCH -f body="$(cat /tmp/pr-body.md)"
+   ```
