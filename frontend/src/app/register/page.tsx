@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Lock, Mail, User as UserIcon, Wallet } from "lucide-react";
 import { login, register, setToken } from "@/lib/api";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,7 +26,7 @@ export default function RegisterPage() {
       setToken(res.access_token);
       router.push("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Registration failed");
+      setError(err instanceof Error ? err.message : t.register.registrationFailed);
     } finally {
       setLoading(false);
     }
@@ -37,8 +39,8 @@ export default function RegisterPage() {
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/15">
           <Wallet className="h-8 w-8" />
         </div>
-        <h1 className="text-2xl font-extrabold">Talk Budget</h1>
-        <p className="mt-1 text-sm text-white/80">Create your account</p>
+        <h1 className="text-2xl font-extrabold">{t.nav.appName}</h1>
+        <p className="mt-1 text-sm text-white/80">{t.register.subtitle}</p>
       </div>
 
       <form
@@ -46,7 +48,7 @@ export default function RegisterPage() {
         className="mx-5 -mt-6 rounded-card bg-white p-6 shadow-card md:mx-0 md:mt-0 md:rounded-none md:shadow-none"
       >
         <label className="mb-1 block text-sm font-semibold text-brand-900">
-          Username
+          {t.register.username}
         </label>
         <div className="mb-4 flex items-center gap-2 rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5">
           <UserIcon className="h-4 w-4 text-brand-500" />
@@ -55,12 +57,13 @@ export default function RegisterPage() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             autoCapitalize="none"
-            placeholder="John Smith"
+            placeholder={t.register.usernamePlaceholder}
+            data-testid="register-username"
           />
         </div>
 
         <label className="mb-1 block text-sm font-semibold text-brand-900">
-          Email
+          {t.register.email}
         </label>
         <div className="mb-4 flex items-center gap-2 rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5">
           <Mail className="h-4 w-4 text-brand-500" />
@@ -70,12 +73,13 @@ export default function RegisterPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoCapitalize="none"
-            placeholder="john.smith@example.com"
+            placeholder={t.register.emailPlaceholder}
+            data-testid="register-email"
           />
         </div>
 
         <label className="mb-1 block text-sm font-semibold text-brand-900">
-          Password
+          {t.register.password}
         </label>
         <div className="mb-5 flex items-center gap-2 rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5">
           <Lock className="h-4 w-4 text-brand-500" />
@@ -85,6 +89,7 @@ export default function RegisterPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
+            data-testid="register-password"
           />
         </div>
 
@@ -96,14 +101,15 @@ export default function RegisterPage() {
           type="submit"
           disabled={loading}
           className="w-full rounded-xl bg-brand-gradient py-3 font-bold text-white shadow-card transition active:scale-[0.99] disabled:opacity-60"
+          data-testid="register-submit"
         >
-          {loading ? "Creating account..." : "Create account"}
+          {loading ? t.register.creatingAccount : t.register.createAccount}
         </button>
 
         <p className="mt-4 text-center text-sm text-slate-500">
-          Already have an account?{" "}
+          {t.register.alreadyHaveAccount}{" "}
           <Link href="/login" className="font-semibold text-brand-500">
-            Sign in
+            {t.register.signIn}
           </Link>
         </p>
       </form>

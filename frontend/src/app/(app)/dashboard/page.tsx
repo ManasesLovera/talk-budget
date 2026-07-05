@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ChevronRight, X } from "lucide-react";
 import AccountCard from "@/components/AccountCard";
 import DonutChart from "@/components/DonutChart";
+import { useLanguage } from "@/lib/i18n/language-context";
+import type { Language } from "@/lib/i18n/translations";
 import {
   getCategories,
   getTransactions,
@@ -13,22 +15,25 @@ import {
   type Transaction,
   type Wallet,
 } from "@/lib/api";
+import { useCurrency } from "@/lib/currency-context";
 
 type DateFilter = "today" | "month" | "year" | "custom";
 
-function getTodayBounds(): { start: string; end: string; label: string } {
+const LOCALES: Record<Language, string> = { en: "en-US", es: "es-ES" };
+
+function getTodayBounds(language: Language): { start: string; end: string; label: string } {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
-  const label = now.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  const label = now.toLocaleDateString(LOCALES[language], { month: "short", day: "numeric", year: "numeric" });
   return { start: start.toISOString(), end: end.toISOString(), label };
 }
 
-function getMonthBounds(): { start: string; end: string; label: string } {
+function getMonthBounds(language: Language): { start: string; end: string; label: string } {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), 1);
   const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-  const label = now.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  const label = now.toLocaleDateString(LOCALES[language], { month: "long", year: "numeric" });
   return { start: start.toISOString(), end: end.toISOString(), label };
 }
 
@@ -40,12 +45,16 @@ function getYearBounds(): { start: string; end: string; label: string } {
   return { start: start.toISOString(), end: end.toISOString(), label };
 }
 
-function getCustomBounds(startDate: string, endDate: string): { start: string; end: string; label: string } {
+function getCustomBounds(
+  startDate: string,
+  endDate: string,
+  language: Language,
+): { start: string; end: string; label: string } {
   const start = new Date(startDate);
   const end = new Date(endDate);
   end.setHours(23, 59, 59);
-  const startLabel = start.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-  const endLabel = end.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  const startLabel = start.toLocaleDateString(LOCALES[language], { month: "short", day: "numeric" });
+  const endLabel = end.toLocaleDateString(LOCALES[language], { month: "short", day: "numeric", year: "numeric" });
   const label = `${startLabel} - ${endLabel}`;
   return { start: start.toISOString(), end: end.toISOString(), label };
 }
@@ -60,6 +69,8 @@ function money(n: number): string {
 }
 
 export default function DashboardPage() {
+  const { symbol } = useCurrency();
+  const { language, t: tr } = useLanguage();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [wallets, setWallets] = useState<Wallet[]>([]);
@@ -72,14 +83,16 @@ export default function DashboardPage() {
   const getDateBounds = () => {
     switch (dateFilter) {
       case "today":
-        return getTodayBounds();
+        return getTodayBounds(language);
       case "year":
         return getYearBounds();
       case "custom":
-        return customStart && customEnd ? getCustomBounds(customStart, customEnd) : getMonthBounds();
+        return customStart && customEnd
+          ? getCustomBounds(customStart, customEnd, language)
+          : getMonthBounds(language);
       case "month":
       default:
-        return getMonthBounds();
+        return getMonthBounds(language);
     }
   };
 
@@ -97,7 +110,8 @@ export default function DashboardPage() {
       setWallets(wals);
       setLoading(false);
     });
-  }, [dateFilter, customStart, customEnd]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateFilter, customStart, customEnd, language]);
 
   const income = transactions
     .filter((t) => t.type === "income")
@@ -115,7 +129,7 @@ export default function DashboardPage() {
     .filter((t) => t.type === "expense")
     .forEach((t) => {
       const name =
-        categories.find((c) => c.id === t.category_id)?.name ?? "Uncategorized";
+        categories.find((c) => c.id === t.category_id)?.name ?? tr.dashboard.uncategorized;
       spendByCategory.set(name, (spendByCategory.get(name) ?? 0) + parseFloat(t.amount));
     });
   const ranked = Array.from(spendByCategory.entries()).sort((a, b) => b[1] - a[1]);
@@ -129,18 +143,18 @@ export default function DashboardPage() {
       value: amount,
       color: SEGMENT_COLORS[i],
     })),
-    ...(othersTotal > 0 ? [{ label: "Others", value: othersTotal, color: OTHERS_COLOR }] : []),
+    ...(othersTotal > 0 ? [{ label: tr.dashboard.others, value: othersTotal, color: OTHERS_COLOR }] : []),
   ];
 
   if (loading) {
-    return <p className="py-8 text-center text-sm text-slate-400">Loading…</p>;
+    return <p className="py-8 text-center text-sm text-slate-400">{tr.common.loading}</p>;
   }
 
   const filterOptions: { key: DateFilter; label: string }[] = [
-    { key: "today", label: "Today" },
-    { key: "month", label: "This Month" },
-    { key: "year", label: "This Year" },
-    { key: "custom", label: "Custom" },
+    { key: "today", label: tr.dashboard.filterToday },
+    { key: "month", label: tr.dashboard.filterMonth },
+    { key: "year", label: tr.dashboard.filterYear },
+    { key: "custom", label: tr.dashboard.filterCustom },
   ];
 
   return (
@@ -169,7 +183,7 @@ export default function DashboardPage() {
             onChange={(e) => setCustomStart(e.target.value)}
             className="rounded-lg border border-brand-50 px-2 py-1 text-sm text-brand-900"
           />
-          <span className="text-sm text-slate-400">to</span>
+          <span className="text-sm text-slate-400">{tr.dashboard.filterTo}</span>
           <input
             type="date"
             value={customEnd}
@@ -185,7 +199,7 @@ export default function DashboardPage() {
               className="ml-auto flex items-center gap-1 text-xs font-semibold text-slate-400"
             >
               <X className="h-3.5 w-3.5" />
-              Clear
+              {tr.dashboard.filterClear}
             </button>
           )}
         </div>
@@ -201,20 +215,20 @@ export default function DashboardPage() {
         className="block rounded-card bg-white p-4 shadow-card"
       >
         <div className="mb-3 flex items-center justify-between">
-          <span className="font-bold text-brand-900">Balance</span>
+          <span className="font-bold text-brand-900">{tr.dashboard.balance}</span>
           <ChevronRight className="h-4 w-4 text-slate-300" />
         </div>
         <div className="flex gap-6">
           <div>
-            <p className="text-xs text-slate-400">Opening balance</p>
-            <p className="mt-1 font-bold text-brand-900">
-              ${openingBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+            <p className="text-xs text-slate-400">{tr.dashboard.openingBalance}</p>
+            <p className="mt-1 font-bold text-brand-900" data-testid="opening-balance">
+              {symbol}{openingBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
             </p>
           </div>
           <div>
-            <p className="text-xs text-slate-400">Ending balance</p>
-            <p className="mt-1 font-bold text-brand-900">
-              ${endingBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+            <p className="text-xs text-slate-400">{tr.dashboard.endingBalance}</p>
+            <p className="mt-1 font-bold text-brand-900" data-testid="ending-balance">
+              {symbol}{endingBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
             </p>
           </div>
         </div>
@@ -223,20 +237,20 @@ export default function DashboardPage() {
       {/* Expense structure */}
       <section className="rounded-card bg-white p-4 shadow-card">
         <div className="mb-4 flex items-center justify-between">
-          <span className="font-bold text-brand-900">Expense Structure</span>
+          <span className="font-bold text-brand-900">{tr.dashboard.expenseStructure}</span>
         </div>
 
         {segments.length === 0 ? (
           <p className="py-6 text-center text-sm text-slate-400">
-            No expenses yet this month.
+            {tr.dashboard.noExpenses}
           </p>
         ) : (
           <>
             <div className="flex items-center gap-5">
               <DonutChart
                 segments={segments}
-                centerLabel="Expense"
-                centerValue={`$${money(expenses)}`}
+                centerLabel={tr.dashboard.expense}
+                centerValue={`${symbol}${money(expenses)}`}
               />
               <div className="flex-1 space-y-2.5">
                 {segments.map((s) => (
@@ -269,7 +283,7 @@ export default function DashboardPage() {
                           />
                           {name}
                         </span>
-                        <span className="font-semibold text-slate-500">${money(amount)}</span>
+                        <span className="font-semibold text-slate-500">{symbol}{money(amount)}</span>
                       </div>
                     ))}
                   </div>
@@ -278,7 +292,7 @@ export default function DashboardPage() {
                   onClick={() => setShowMore((v) => !v)}
                   className="mt-3 text-xs font-semibold text-brand-600"
                 >
-                  {showMore ? "Show less" : "Show more"}
+                  {showMore ? tr.dashboard.showLess : tr.dashboard.showMore}
                 </button>
               </>
             )}
@@ -294,28 +308,28 @@ export default function DashboardPage() {
         className="block rounded-card bg-white p-4 shadow-card"
       >
         <div className="mb-3 flex items-center justify-between">
-          <span className="font-bold text-brand-900">Summary</span>
+          <span className="font-bold text-brand-900">{tr.dashboard.summary}</span>
           <ChevronRight className="h-4 w-4 text-slate-300" />
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-brand-900">Income</span>
-          <span className="font-bold text-brand-500">${money(income)}</span>
+          <span className="text-brand-900">{tr.dashboard.income}</span>
+          <span className="font-bold text-brand-500" data-testid="summary-income">{symbol}{money(income)}</span>
         </div>
         <div className="mt-2 flex items-center justify-between">
-          <span className="text-brand-900">Expense</span>
-          <span className="font-bold text-brand-900">-${money(expenses)}</span>
+          <span className="text-brand-900">{tr.dashboard.expense}</span>
+          <span className="font-bold text-brand-900" data-testid="summary-expense">-{symbol}{money(expenses)}</span>
         </div>
       </Link>
 
       {/* Net worth */}
       <section>
-        <h2 className="mb-3 px-1 text-lg font-extrabold text-brand-900">
-          Net worth · ${money(netWorth)}
+        <h2 className="mb-3 px-1 text-lg font-extrabold text-brand-900" data-testid="net-worth">
+          {tr.dashboard.netWorth} · {symbol}{money(netWorth)}
         </h2>
         <div className="space-y-3">
           {wallets.length === 0 ? (
             <p className="text-center text-sm text-slate-400">
-              No wallets yet — add one in the Wallets tab.
+              {tr.dashboard.noWallets}
             </p>
           ) : (
             wallets.map((w) => (
