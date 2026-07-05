@@ -101,11 +101,11 @@ export default function DashboardPage() {
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      getTransactions({ start_date: start, end_date: end }),
+      getTransactions({ start_date: start, end_date: end, page_size: 1000 }),
       getCategories(),
       getWallets(),
-    ]).then(([txns, cats, wals]) => {
-      setTransactions(txns);
+    ]).then(([txnsResponse, cats, wals]) => {
+      setTransactions(txnsResponse.items);
       setCategories(cats);
       setWallets(wals);
       setLoading(false);

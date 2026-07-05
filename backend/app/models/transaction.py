@@ -28,10 +28,16 @@ class Transaction(Base):
 
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     wallet_id: Mapped[int] = mapped_column(ForeignKey("wallets.id", ondelete="CASCADE"))
+    to_wallet_id: Mapped[int | None] = mapped_column(
+        ForeignKey("wallets.id", ondelete="CASCADE"), nullable=True
+    )
     category_id: Mapped[int | None] = mapped_column(
         ForeignKey("categories.id", ondelete="SET NULL"), nullable=True
     )
 
     owner: Mapped["User"] = relationship(back_populates="transactions")  # noqa: F821
-    wallet: Mapped["Wallet"] = relationship(back_populates="transactions")  # noqa: F821
+    wallet: Mapped["Wallet"] = relationship(  # noqa: F821
+        back_populates="transactions", foreign_keys=[wallet_id]
+    )
+    to_wallet: Mapped["Wallet | None"] = relationship(foreign_keys=[to_wallet_id])  # noqa: F821
     category: Mapped["Category"] = relationship(back_populates="transactions")  # noqa: F821

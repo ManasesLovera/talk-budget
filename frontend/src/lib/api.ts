@@ -199,6 +199,7 @@ export interface Transaction {
   type: TransactionType;
   description: string | null;
   wallet_id: number;
+  to_wallet_id: number | null;
   category_id: number | null;
   owner_id: number;
   occurred_at: string;
@@ -209,8 +210,9 @@ export interface TransactionCreatePayload {
   type: TransactionType;
   description?: string;
   wallet_id: number;
+  to_wallet_id?: number;
   category_id?: number;
-  occurred_at?: string;
+  occurred_at: string;
 }
 
 export interface TransactionFilters {
@@ -218,17 +220,27 @@ export interface TransactionFilters {
   end_date?: string;
   category_id?: number;
   wallet_id?: number;
+  type?: TransactionType;
+  page?: number;
+  page_size?: number;
+}
+
+export interface TransactionListResponse {
+  items: Transaction[];
+  total: number;
+  total_income: string;
+  total_expense: string;
 }
 
 export function getTransactions(
   filters: TransactionFilters = {}
-): Promise<Transaction[]> {
+): Promise<TransactionListResponse> {
   const params = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== undefined) params.set(key, String(value));
   });
   const qs = params.toString();
-  return request<Transaction[]>(`/transactions${qs ? `?${qs}` : ""}`);
+  return request<TransactionListResponse>(`/transactions${qs ? `?${qs}` : ""}`);
 }
 
 export function createTransaction(
