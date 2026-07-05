@@ -75,11 +75,11 @@ export default function TransactionFilters({
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-nowrap gap-2">
         <select
           value={type}
           onChange={(e) => onTypeChange(e.target.value as TransactionType | "")}
-          className="rounded-lg border border-brand-50 bg-white px-2 py-1.5 text-xs font-semibold text-brand-900 shadow-card"
+          className="min-w-0 flex-1 rounded-lg border border-brand-50 bg-white px-2 py-1.5 text-xs font-semibold text-brand-900 shadow-card"
         >
           <option value="">{tr.transactions.filterAllTypes}</option>
           <option value="income">{tr.transactions.income}</option>
@@ -90,7 +90,7 @@ export default function TransactionFilters({
         <select
           value={walletId}
           onChange={(e) => onWalletChange(e.target.value)}
-          className="rounded-lg border border-brand-50 bg-white px-2 py-1.5 text-xs font-semibold text-brand-900 shadow-card"
+          className="min-w-0 flex-1 rounded-lg border border-brand-50 bg-white px-2 py-1.5 text-xs font-semibold text-brand-900 shadow-card"
         >
           <option value="">{tr.transactions.filterAllWallets}</option>
           {wallets.map((w) => (
