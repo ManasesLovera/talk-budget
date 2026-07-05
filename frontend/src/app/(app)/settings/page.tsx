@@ -90,8 +90,9 @@ export default function SettingsPage() {
       </button>
 
       <div className="md:grid md:grid-cols-2 md:items-start md:gap-6">
+      <div className="flex flex-col gap-6">
       {/* Profile */}
-      <section className="mb-6 rounded-card bg-white p-4 shadow-card md:mb-0">
+      <section className="rounded-card bg-white p-4 shadow-card">
         <h2 className="mb-3 font-bold text-brand-900">{t.settings.profile}</h2>
         <form onSubmit={handleProfileSubmit} className="space-y-3">
           <div>
@@ -140,6 +141,29 @@ export default function SettingsPage() {
           </button>
         </form>
       </section>
+
+      {/* Language */}
+      <section className="mb-6 rounded-card bg-white p-4 shadow-card md:mb-0">
+        <h2 className="mb-3 flex items-center gap-2 font-bold text-brand-900">
+          <Globe className="h-4 w-4" /> {t.settings.language}
+        </h2>
+        <div className="flex gap-2">
+          {(Object.keys(LANGUAGE_LABELS) as Language[]).map((lang) => (
+            <button
+              key={lang}
+              onClick={() => setLanguage(lang)}
+              className={`flex-1 rounded-xl px-3 py-2.5 text-sm font-semibold ${
+                language === lang
+                  ? "bg-brand-gradient text-white"
+                  : "bg-brand-50 text-brand-700"
+              }`}
+            >
+              {LANGUAGE_LABELS[lang]}
+            </button>
+          ))}
+        </div>
+      </section>
+      </div>
 
       {/* Categories */}
       <section className="mb-6 rounded-card bg-white p-4 shadow-card md:mb-0">
@@ -198,28 +222,6 @@ export default function SettingsPage() {
           </button>
         </form>
         {catError && <p className="mt-2 text-xs font-medium text-rose-500">{catError}</p>}
-      </section>
-
-      {/* Language */}
-      <section className="mb-6 rounded-card bg-white p-4 shadow-card md:mb-0">
-        <h2 className="mb-3 flex items-center gap-2 font-bold text-brand-900">
-          <Globe className="h-4 w-4" /> {t.settings.language}
-        </h2>
-        <div className="flex gap-2">
-          {(Object.keys(LANGUAGE_LABELS) as Language[]).map((lang) => (
-            <button
-              key={lang}
-              onClick={() => setLanguage(lang)}
-              className={`flex-1 rounded-xl px-3 py-2.5 text-sm font-semibold ${
-                language === lang
-                  ? "bg-brand-gradient text-white"
-                  : "bg-brand-50 text-brand-700"
-              }`}
-            >
-              {LANGUAGE_LABELS[lang]}
-            </button>
-          ))}
-        </div>
       </section>
       </div>
 
