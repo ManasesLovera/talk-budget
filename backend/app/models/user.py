@@ -33,3 +33,6 @@ class User(Base):
     transactions: Mapped[list["Transaction"]] = relationship(  # noqa: F821
         back_populates="owner", cascade="all, delete-orphan"
     )
+    chat_messages: Mapped[list["ChatMessage"]] = relationship(  # noqa: F821
+        back_populates="owner", cascade="all, delete-orphan"
+    )

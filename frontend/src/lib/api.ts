@@ -220,9 +220,57 @@ export interface ChatMessage {
   content: string;
 }
 
-export function sendChatMessage(messages: ChatMessage[]): Promise<{ reply: string }> {
+export function sendChatMessage(
+  messages: ChatMessage[],
+  conversationId?: string
+): Promise<{ reply: string }> {
   return request<{ reply: string }>("/agent/chat", {
     method: "POST",
+    body: JSON.stringify({ messages, conversation_id: conversationId }),
+  });
+}
+
+// --- Chat history ------------------------------------------------------------
+
+export interface ChatMessageRecord {
+  id: number;
+  conversation_id: string;
+  role: string;
+  content: string;
+  created_at: string;
+  owner_id: number;
+}
+
+export interface ConversationSummary {
+  conversation_id: string;
+  title: string;
+  message_count: number;
+}
+
+export function getChatHistory(
+  conversationId?: string
+): Promise<ChatMessageRecord[]> {
+  const params = conversationId
+    ? `?conversation_id=${encodeURIComponent(conversationId)}`
+    : "";
+  return request<ChatMessageRecord[]>(`/chat-history${params}`);
+}
+
+export function getConversations(): Promise<ConversationSummary[]> {
+  return request<ConversationSummary[]>("/chat-history/conversations");
+}
+
+export function syncChatHistory(
+  messages: { role: string; content: string; conversation_id: string }[]
+): Promise<{ saved: number }> {
+  return request<{ saved: number }>("/chat-history/sync", {
+    method: "POST",
     body: JSON.stringify({ messages }),
+  });
+}
+
+export function deleteConversation(conversationId: string): Promise<void> {
+  return request<void>(`/chat-history/${conversationId}`, {
+    method: "DELETE",
   });
 }
