@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Lock, User as UserIcon, Wallet } from "lucide-react";
-import { login, setToken } from "@/lib/api";
+import { Lock, Mail, User as UserIcon, Wallet } from "lucide-react";
+import { login, register, setToken } from "@/lib/api";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -18,11 +19,12 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
+      await register({ username, email, password });
       const res = await login(username, password);
       setToken(res.access_token);
       router.push("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -35,9 +37,7 @@ export default function LoginPage() {
           <Wallet className="h-8 w-8" />
         </div>
         <h1 className="text-2xl font-extrabold">Talk Budget</h1>
-        <p className="mt-1 text-sm text-white/80">
-          Mobile-first, AI-native finance
-        </p>
+        <p className="mt-1 text-sm text-white/80">Create your account</p>
       </div>
 
       <form
@@ -55,6 +55,21 @@ export default function LoginPage() {
             onChange={(e) => setUsername(e.target.value)}
             autoCapitalize="none"
             placeholder="John Smith"
+          />
+        </div>
+
+        <label className="mb-1 block text-sm font-semibold text-brand-900">
+          Email
+        </label>
+        <div className="mb-4 flex items-center gap-2 rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5">
+          <Mail className="h-4 w-4 text-brand-500" />
+          <input
+            type="email"
+            className="w-full bg-transparent text-sm outline-none"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoCapitalize="none"
+            placeholder="john.smith@example.com"
           />
         </div>
 
@@ -81,13 +96,13 @@ export default function LoginPage() {
           disabled={loading}
           className="w-full rounded-xl bg-brand-gradient py-3 font-bold text-white shadow-card transition active:scale-[0.99] disabled:opacity-60"
         >
-          {loading ? "Signing in..." : "Sign in"}
+          {loading ? "Creating account..." : "Create account"}
         </button>
 
         <p className="mt-4 text-center text-sm text-slate-500">
-          Don&apos;t have an account?{" "}
-          <Link href="/register" className="font-semibold text-brand-500">
-            Create one
+          Already have an account?{" "}
+          <Link href="/login" className="font-semibold text-brand-500">
+            Sign in
           </Link>
         </p>
       </form>

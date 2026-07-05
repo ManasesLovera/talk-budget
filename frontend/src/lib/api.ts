@@ -75,6 +75,19 @@ export function getMe(): Promise<User> {
   return request<User>("/auth/me");
 }
 
+export interface RegisterPayload {
+  username: string;
+  email: string;
+  password: string;
+}
+
+export function register(payload: RegisterPayload): Promise<User> {
+  return request<User>("/auth/register", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 export interface UserUpdatePayload {
   username?: string;
   email?: string;
