@@ -3,15 +3,7 @@
 import { useEffect, useState } from "react";
 import { CreditCard, Landmark, PiggyBank, Plus, TrendingUp, Wallet as WalletIcon } from "lucide-react";
 import { createWallet, getWallets, type Wallet } from "@/lib/api";
-
-const WALLET_TYPES = [
-  { value: "cash", label: "Cash" },
-  { value: "checking", label: "Checking" },
-  { value: "savings", label: "Savings" },
-  { value: "credit_card", label: "Credit card" },
-  { value: "investment", label: "Investment" },
-  { value: "loan", label: "Loan" },
-];
+import { useLanguage } from "@/lib/i18n/language-context";
 
 const ICONS: Record<string, typeof WalletIcon> = {
   cash: WalletIcon,
@@ -23,6 +15,15 @@ const ICONS: Record<string, typeof WalletIcon> = {
 };
 
 export default function WalletsPage() {
+  const { t } = useLanguage();
+  const WALLET_TYPES = [
+    { value: "cash", label: t.wallets.cash },
+    { value: "checking", label: t.wallets.checking },
+    { value: "savings", label: t.wallets.savings },
+    { value: "credit_card", label: t.wallets.creditCard },
+    { value: "investment", label: t.wallets.investment },
+    { value: "loan", label: t.wallets.loan },
+  ];
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
@@ -55,7 +56,7 @@ export default function WalletsPage() {
       setFormOpen(false);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create wallet");
+      setError(err instanceof Error ? err.message : t.wallets.createFailed);
     } finally {
       setSubmitting(false);
     }
@@ -70,7 +71,7 @@ export default function WalletsPage() {
         onClick={() => setFormOpen((v) => !v)}
         className="mb-4 flex w-full items-center justify-center gap-2 rounded-card bg-white py-3 font-bold text-brand-600 shadow-card md:max-w-xl"
       >
-        <Plus className="h-4 w-4" /> Add wallet or loan
+        <Plus className="h-4 w-4" /> {t.wallets.addWalletOrLoan}
       </button>
 
       {formOpen && (
@@ -80,7 +81,7 @@ export default function WalletsPage() {
         >
           <input
             type="text"
-            placeholder="Name (e.g. Chase Checking)"
+            placeholder={t.wallets.namePlaceholder}
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -91,16 +92,16 @@ export default function WalletsPage() {
             onChange={(e) => setType(e.target.value)}
             className="w-full rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-sm outline-none"
           >
-            {WALLET_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
+            {WALLET_TYPES.map((wt) => (
+              <option key={wt.value} value={wt.value}>
+                {wt.label}
               </option>
             ))}
           </select>
           <input
             type="number"
             step="0.01"
-            placeholder="Starting balance"
+            placeholder={t.wallets.startingBalancePlaceholder}
             value={balance}
             onChange={(e) => setBalance(e.target.value)}
             className="w-full rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-sm outline-none"
@@ -111,27 +112,30 @@ export default function WalletsPage() {
             disabled={submitting}
             className="bg-brand-gradient w-full rounded-xl py-2.5 font-bold text-white disabled:opacity-60"
           >
-            {submitting ? "Saving…" : "Save"}
+            {submitting ? t.wallets.saving : t.wallets.save}
           </button>
         </form>
       )}
 
       {loading ? (
-        <p className="py-8 text-center text-sm text-slate-400">Loading…</p>
+        <p className="py-8 text-center text-sm text-slate-400">{t.common.loading}</p>
       ) : wallets.length === 0 ? (
         <p className="py-8 text-center text-sm text-slate-400">
-          No wallets yet. Add one above to get started.
+          {t.wallets.noWallets}
         </p>
       ) : (
         <>
           {others.length > 0 && (
             <div className="mb-6 space-y-2">
               <h2 className="px-1 text-sm font-bold uppercase text-slate-400">
-                Wallets
+                {t.wallets.walletsHeader}
               </h2>
               <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
               {others.map((w) => {
                 const Icon = ICONS[w.type] ?? WalletIcon;
+                const typeLabel =
+                  WALLET_TYPES.find((wt) => wt.value === w.type)?.label ??
+                  w.type.replace("_", " ");
                 return (
                   <div
                     key={w.id}
@@ -144,7 +148,7 @@ export default function WalletsPage() {
                       <div>
                         <p className="font-semibold text-brand-900">{w.name}</p>
                         <p className="text-xs capitalize text-slate-400">
-                          {w.type.replace("_", " ")}
+                          {typeLabel}
                         </p>
                       </div>
                     </div>
@@ -165,7 +169,7 @@ export default function WalletsPage() {
           {loans.length > 0 && (
             <div className="space-y-2">
               <h2 className="px-1 text-sm font-bold uppercase text-slate-400">
-                Loans
+                {t.wallets.loansHeader}
               </h2>
               <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
               {loans.map((w) => (

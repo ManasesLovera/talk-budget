@@ -9,15 +9,17 @@ import {
   Wallet,
   Wallet as WalletMark,
 } from "lucide-react";
-
-const NAV_ITEMS = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/transactions", label: "Transactions", icon: Receipt },
-  { href: "/wallets", label: "Wallets", icon: Wallet },
-];
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { t } = useLanguage();
+
+  const NAV_ITEMS = [
+    { href: "/dashboard", label: t.nav.dashboard, icon: LayoutDashboard },
+    { href: "/transactions", label: t.nav.transactions, icon: Receipt },
+    { href: "/wallets", label: t.nav.wallets, icon: Wallet },
+  ];
 
   return (
     <aside className="hidden md:flex md:w-60 md:shrink-0 md:flex-col md:border-r md:border-brand-100 md:bg-white">
@@ -28,7 +30,7 @@ export default function Sidebar() {
         <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-gradient text-white">
           <WalletMark className="h-4 w-4" />
         </span>
-        <span className="text-lg font-extrabold text-brand-900">Talk Budget</span>
+        <span className="text-lg font-extrabold text-brand-900">{t.nav.appName}</span>
       </Link>
 
       <nav className="flex flex-1 flex-col gap-1 p-3">
@@ -61,7 +63,7 @@ export default function Sidebar() {
           }`}
         >
           <Settings className="h-5 w-5" strokeWidth={pathname === "/settings" ? 2.5 : 2} />
-          Settings
+          {t.nav.settings}
         </Link>
       </div>
     </aside>

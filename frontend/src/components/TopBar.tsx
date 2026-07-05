@@ -2,19 +2,21 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { Settings } from "lucide-react";
-
-const TITLES: Record<string, string> = {
-  "/": "Talk Budget",
-  "/transactions": "Transactions",
-  "/dashboard": "Dashboard",
-  "/wallets": "Wallets & Loans",
-  "/settings": "Settings",
-};
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export default function TopBar() {
   const router = useRouter();
   const pathname = usePathname();
-  const title = TITLES[pathname] ?? "Talk Budget";
+  const { t } = useLanguage();
+
+  const TITLES: Record<string, string> = {
+    "/": t.topbar.chat,
+    "/transactions": t.topbar.transactions,
+    "/dashboard": t.topbar.dashboard,
+    "/wallets": t.topbar.walletsLoans,
+    "/settings": t.topbar.settings,
+  };
+  const title = TITLES[pathname] ?? t.topbar.chat;
 
   return (
     <>

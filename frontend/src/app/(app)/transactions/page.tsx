@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Trash2, TrendingDown, TrendingUp } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/language-context";
+import type { Language } from "@/lib/i18n/translations";
 import {
   createTransaction,
   deleteTransaction,
@@ -14,14 +16,17 @@ import {
   type Wallet,
 } from "@/lib/api";
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
+const LOCALES: Record<Language, string> = { en: "en-US", es: "es-ES" };
+
+function formatDate(iso: string, language: Language): string {
+  return new Date(iso).toLocaleDateString(LOCALES[language], {
     month: "short",
     day: "numeric",
   });
 }
 
 export default function TransactionsPage() {
+  const { language, t: tr } = useLanguage();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [wallets, setWallets] = useState<Wallet[]>([]);
@@ -80,7 +85,7 @@ export default function TransactionsPage() {
       setFormOpen(false);
       await loadAll();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to add transaction");
+      setError(err instanceof Error ? err.message : tr.transactions.addFailed);
     } finally {
       setSubmitting(false);
     }
@@ -92,8 +97,8 @@ export default function TransactionsPage() {
   }
 
   function categoryName(id: number | null): string {
-    if (!id) return "Uncategorized";
-    return categories.find((c) => c.id === id)?.name ?? "Uncategorized";
+    if (!id) return tr.transactions.uncategorized;
+    return categories.find((c) => c.id === id)?.name ?? tr.transactions.uncategorized;
   }
 
   return (
@@ -104,13 +109,13 @@ export default function TransactionsPage() {
           onClick={() => openForm("income")}
           className="flex flex-1 items-center justify-center gap-2 rounded-card bg-white py-3 font-bold text-brand-600 shadow-card"
         >
-          <TrendingUp className="h-4 w-4" /> Income
+          <TrendingUp className="h-4 w-4" /> {tr.transactions.income}
         </button>
         <button
           onClick={() => openForm("expense")}
           className="flex flex-1 items-center justify-center gap-2 rounded-card bg-white py-3 font-bold text-rose-500 shadow-card"
         >
-          <TrendingDown className="h-4 w-4" /> Expense
+          <TrendingDown className="h-4 w-4" /> {tr.transactions.expense}
         </button>
       </div>
 
@@ -121,14 +126,14 @@ export default function TransactionsPage() {
         >
           <div className="flex items-center justify-between">
             <span className="font-bold text-brand-900">
-              New {formType === "income" ? "income" : "expense"}
+              {formType === "income" ? tr.transactions.newIncome : tr.transactions.newExpense}
             </span>
             <button
               type="button"
               onClick={() => setFormOpen(false)}
               className="text-xs font-semibold text-slate-400"
             >
-              Cancel
+              {tr.transactions.cancel}
             </button>
           </div>
 
@@ -137,7 +142,7 @@ export default function TransactionsPage() {
             step="0.01"
             min="0"
             required
-            placeholder="Amount"
+            placeholder={tr.transactions.amountPlaceholder}
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             className="w-full rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-sm outline-none"
@@ -145,7 +150,7 @@ export default function TransactionsPage() {
 
           <input
             type="text"
-            placeholder="Description (optional)"
+            placeholder={tr.transactions.descriptionPlaceholder}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="w-full rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-sm outline-none"
@@ -156,7 +161,7 @@ export default function TransactionsPage() {
             onChange={(e) => setCategoryId(e.target.value)}
             className="w-full rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-sm outline-none"
           >
-            <option value="">No category</option>
+            <option value="">{tr.transactions.noCategory}</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -170,7 +175,7 @@ export default function TransactionsPage() {
             required
             className="w-full rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-sm outline-none"
           >
-            {wallets.length === 0 && <option value="">No wallets yet</option>}
+            {wallets.length === 0 && <option value="">{tr.transactions.noWalletsYet}</option>}
             {wallets.map((w) => (
               <option key={w.id} value={w.id}>
                 {w.name}
@@ -185,17 +190,17 @@ export default function TransactionsPage() {
             disabled={submitting || !walletId}
             className="bg-brand-gradient w-full rounded-xl py-2.5 font-bold text-white disabled:opacity-60"
           >
-            {submitting ? "Saving…" : "Save"}
+            {submitting ? tr.transactions.saving : tr.transactions.save}
           </button>
         </form>
       )}
 
       {/* List */}
       {loading ? (
-        <p className="py-8 text-center text-sm text-slate-400">Loading…</p>
+        <p className="py-8 text-center text-sm text-slate-400">{tr.common.loading}</p>
       ) : transactions.length === 0 ? (
         <p className="py-8 text-center text-sm text-slate-400">
-          No transactions yet — add one above or ask the chat assistant.
+          {tr.transactions.noTransactions}
         </p>
       ) : (
         <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
@@ -209,7 +214,7 @@ export default function TransactionsPage() {
                   {t.description || categoryName(t.category_id)}
                 </p>
                 <p className="text-xs text-slate-400">
-                  {categoryName(t.category_id)} · {formatDate(t.occurred_at)}
+                  {categoryName(t.category_id)} · {formatDate(t.occurred_at, language)}
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -222,7 +227,7 @@ export default function TransactionsPage() {
                 </span>
                 <button
                   onClick={() => handleDelete(t.id)}
-                  aria-label="Delete transaction"
+                  aria-label={tr.transactions.deleteTransaction}
                   className="text-slate-300"
                 >
                   <Trash2 className="h-4 w-4" />
