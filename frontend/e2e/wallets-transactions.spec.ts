@@ -46,6 +46,7 @@ test.describe("wallets and transactions", () => {
     await expect(page.getByText("Freelance payment")).toBeVisible();
     await expect(page.getByText("+US$50.00")).toBeVisible();
     await maybeScreenshot(page, testInfo, "transactions-list-after-income");
+    await maybeScreenshot(page, testInfo, "transactions-filters");
 
     await page.goto("/wallets");
     await expect(page.getByText("US$50")).toBeVisible();
