@@ -4,7 +4,16 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import agent, auth, categories, chat_history, transactions, users, wallets
+from app.api import (
+    agent,
+    auth,
+    categories,
+    chat_history,
+    transaction_templates,
+    transactions,
+    users,
+    wallets,
+)
 from app.core.config import settings
 from app.services.seed import init_db
 
@@ -40,6 +49,7 @@ app.include_router(users.router, prefix=api_prefix)
 app.include_router(wallets.router, prefix=api_prefix)
 app.include_router(categories.router, prefix=api_prefix)
 app.include_router(transactions.router, prefix=api_prefix)
+app.include_router(transaction_templates.router, prefix=api_prefix)
 app.include_router(agent.router, prefix=api_prefix)
 app.include_router(chat_history.router, prefix=api_prefix)
 

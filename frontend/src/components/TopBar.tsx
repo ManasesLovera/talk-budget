@@ -14,6 +14,7 @@ export default function TopBar() {
     "/transactions": t.topbar.transactions,
     "/dashboard": t.topbar.dashboard,
     "/wallets": t.topbar.walletsLoans,
+    "/templates": t.topbar.templates,
     "/settings": t.topbar.settings,
   };
   const title = TITLES[pathname] ?? t.topbar.chat;
