@@ -7,6 +7,7 @@ import {
   createTransaction,
   type Category,
   type Transaction,
+  type TransactionTemplate,
   type TransactionType,
   type Wallet,
 } from "@/lib/api";
@@ -20,6 +21,7 @@ function nowForInput(): string {
 interface TransactionFormProps {
   wallets: Wallet[];
   categories: Category[];
+  templates?: TransactionTemplate[];
   onCreated: (transaction: Transaction) => void;
   onCancel: () => void;
 }
@@ -27,6 +29,7 @@ interface TransactionFormProps {
 export default function TransactionForm({
   wallets,
   categories,
+  templates = [],
   onCreated,
   onCancel,
 }: TransactionFormProps) {
@@ -38,6 +41,7 @@ export default function TransactionForm({
   const [walletId, setWalletId] = useState(wallets[0] ? String(wallets[0].id) : "");
   const [toWalletId, setToWalletId] = useState("");
   const [occurredAt, setOccurredAt] = useState(nowForInput());
+  const [templateId, setTemplateId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,6 +50,17 @@ export default function TransactionForm({
       setWalletId(String(wallets[0].id));
     }
   }, [wallets, walletId]);
+
+  function applyTemplate(id: string) {
+    setTemplateId(id);
+    const template = templates.find((t) => String(t.id) === id);
+    if (!template) return;
+    setType(template.type);
+    if (template.amount != null) setAmount(template.amount);
+    setDescription(template.description ?? "");
+    setCategoryId(template.category_id ? String(template.category_id) : "");
+    if (template.wallet_id) setWalletId(String(template.wallet_id));
+  }
 
   const typeOptions: { key: TransactionType; label: string; icon: React.ReactNode }[] = [
     { key: "expense", label: tr.transactions.expense, icon: <TrendingDown className="h-4 w-4" /> },
@@ -82,6 +97,21 @@ export default function TransactionForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
+      {templates.length > 0 && (
+        <select
+          value={templateId}
+          onChange={(e) => applyTemplate(e.target.value)}
+          className="w-full rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-sm outline-none"
+        >
+          <option value="">{tr.transactions.useTemplate}</option>
+          {templates.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.name}
+            </option>
+          ))}
+        </select>
+      )}
+
       <div className="flex gap-2">
         {typeOptions.map((opt) => (
           <button

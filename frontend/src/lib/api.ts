@@ -256,6 +256,55 @@ export function deleteTransaction(id: number): Promise<void> {
   return request<void>(`/transactions/${id}`, { method: "DELETE" });
 }
 
+// --- Transaction templates ----------------------------------------------------
+
+export interface TransactionTemplate {
+  id: number;
+  name: string;
+  type: TransactionType;
+  amount: string | null;
+  description: string | null;
+  wallet_id: number | null;
+  category_id: number | null;
+  owner_id: number;
+}
+
+export interface TransactionTemplatePayload {
+  name: string;
+  type: TransactionType;
+  amount?: number | null;
+  description?: string | null;
+  wallet_id?: number | null;
+  category_id?: number | null;
+}
+
+export function getTransactionTemplates(): Promise<TransactionTemplate[]> {
+  return request<TransactionTemplate[]>("/transaction-templates");
+}
+
+export function createTransactionTemplate(
+  payload: TransactionTemplatePayload
+): Promise<TransactionTemplate> {
+  return request<TransactionTemplate>("/transaction-templates", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateTransactionTemplate(
+  id: number,
+  payload: Partial<TransactionTemplatePayload>
+): Promise<TransactionTemplate> {
+  return request<TransactionTemplate>(`/transaction-templates/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteTransactionTemplate(id: number): Promise<void> {
+  return request<void>(`/transaction-templates/${id}`, { method: "DELETE" });
+}
+
 // --- Agent chat --------------------------------------------------------------
 
 export interface ChatMessage {

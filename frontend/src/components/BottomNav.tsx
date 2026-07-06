@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bot, LayoutDashboard, Receipt, Wallet } from "lucide-react";
+import { Bot, LayoutDashboard, LayoutTemplate, Receipt, Wallet } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/language-context";
 
 export default function BottomNav() {
@@ -14,6 +14,7 @@ export default function BottomNav() {
     { href: "/transactions", label: t.nav.transactions, icon: Receipt },
     { href: "/dashboard", label: t.nav.dashboard, icon: LayoutDashboard },
     { href: "/wallets", label: t.nav.wallets, icon: Wallet },
+    { href: "/templates", label: t.nav.templates, icon: LayoutTemplate },
   ];
 
   return (

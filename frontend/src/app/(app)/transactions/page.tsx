@@ -7,10 +7,12 @@ import type { Language } from "@/lib/i18n/translations";
 import {
   deleteTransaction,
   getCategories,
+  getTransactionTemplates,
   getTransactions,
   getWallets,
   type Category,
   type Transaction,
+  type TransactionTemplate,
   type TransactionType,
   type Wallet,
 } from "@/lib/api";
@@ -44,6 +46,7 @@ export default function TransactionsPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const [wallets, setWallets] = useState<Wallet[]>([]);
+  const [templates, setTemplates] = useState<TransactionTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
 
@@ -58,7 +61,7 @@ export default function TransactionsPage() {
 
   async function load() {
     setLoading(true);
-    const [txResponse, cats, wals] = await Promise.all([
+    const [txResponse, cats, wals, tmpls] = await Promise.all([
       getTransactions({
         start_date: start.toISOString(),
         end_date: end.toISOString(),
@@ -69,6 +72,7 @@ export default function TransactionsPage() {
       }),
       getCategories(),
       getWallets(),
+      getTransactionTemplates(),
     ]);
     setTransactions(txResponse.items);
     setTotalIncome(parseFloat(txResponse.total_income));
@@ -76,6 +80,7 @@ export default function TransactionsPage() {
     setTotalCount(txResponse.total);
     setCategories(cats);
     setWallets(wals);
+    setTemplates(tmpls);
     setLoading(false);
   }
 
@@ -245,6 +250,7 @@ export default function TransactionsPage() {
         <TransactionForm
           wallets={wallets}
           categories={categories}
+          templates={templates}
           onCancel={() => setFormOpen(false)}
           onCreated={async () => {
             setFormOpen(false);

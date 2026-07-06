@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
+  LayoutTemplate,
   Receipt,
   Settings,
   Wallet,
@@ -19,6 +20,7 @@ export default function Sidebar() {
     { href: "/dashboard", label: t.nav.dashboard, icon: LayoutDashboard },
     { href: "/transactions", label: t.nav.transactions, icon: Receipt },
     { href: "/wallets", label: t.nav.wallets, icon: Wallet },
+    { href: "/templates", label: t.nav.templates, icon: LayoutTemplate },
   ];
 
   return (
