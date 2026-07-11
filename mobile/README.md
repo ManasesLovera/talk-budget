@@ -60,41 +60,162 @@ larger icon plus its label centered directly beneath it.
 | Storage       | AsyncStorage (JWT), IndexedDB-style offline chat cache      |
 | i18n          | English / Spanish, currency USD / DOP                       |
 
-## Getting started
+## Requirements
 
-Run from `mobile/` (Bun preferred; Node works as a fallback):
+| To run…                         | You need…                                                                 |
+| ------------------------------- | ------------------------------------------------------------------------- |
+| Backend + DB + cache + web      | Docker & Docker Compose                                                   |
+| Mobile tooling (Metro, Expo)    | **Node 20 LTS** (or **Bun ≥ 1.3**)                                        |
+| Android SDK tools (`sdkmanager`)| **Java 17+** (JDK)                                                        |
+| Android **emulator**            | A CPU with **Intel VT-x / AMD-V enabled in BIOS**, **KVM**, Android SDK   |
 
-```bash
-bun install            # or npm install
-bunx expo start        # dev server + QR for Expo Go
-bunx expo start --web  # run in the browser (react-native-web)
-bunx tsc --noEmit      # typecheck
-npx expo-doctor        # project health check
-```
+> Reference environment this was built and verified on: Ubuntu, Intel Core
+> i7‑4712MQ (VT‑x), Android 14 (API 34) x86_64 emulator, Node 20, Bun 1.3,
+> Expo SDK 51.
 
-The app targets these backend base URLs (see `src/lib/api.ts`):
+The mobile app targets these backend base URLs (see `src/lib/api.ts`):
 
-- **Android emulator** → `http://10.0.2.2:8000/api/v1` (host loopback)
+- **Android emulator** → `http://10.0.2.2:8000/api/v1` (the emulator's alias for the host loopback)
 - **iOS / web** → `http://localhost:8000/api/v1`
 
-Start the backend first with `docker compose up` from the repo root.
+---
 
-## Running on an Android emulator (Linux)
+## Running the full stack
 
-An x86_64 emulator needs KVM (hardware virtualization enabled in BIOS). Once
-`/dev/kvm` exists:
+### 1. Backend, PostgreSQL, Redis, and the web frontend (Docker)
+
+From the **repo root**:
 
 ```bash
-# One-time SDK install (user-space, no sudo):
+cp example.env .env          # first time only; add OPENCODE_API_KEY if you have one
+docker compose up --build -d
+```
+
+| Service   | URL / port                                   |
+| --------- | -------------------------------------------- |
+| Frontend  | http://localhost:3000                        |
+| Backend   | http://localhost:8000 (Swagger at `/docs`)   |
+| Postgres  | localhost:5433                               |
+| Redis     | localhost:6380                               |
+
+Default login (seeded on startup): **`admin` / `admin123`**.
+
+> The mobile app needs this backend reachable. The containers **stop after a host
+> reboot** — just run `docker compose up -d` again.
+
+### 2. Install the mobile app's dependencies
+
+```bash
+cd mobile
+bun install                  # or: npm install
+```
+
+### 3. Run the mobile app in the browser (fastest — react-native-web)
+
+```bash
+# first time only: add the web renderer deps
+bunx expo install react-dom react-native-web @expo/metro-runtime
+bunx expo start --web        # opens http://localhost:8081 in the browser
+```
+
+### 4. Run the mobile app on a physical phone (Expo Go)
+
+```bash
+bunx expo start              # scan the QR code with the Expo Go app
+```
+
+> On a physical phone, repoint `API_BASE` in `src/lib/api.ts` at your computer's
+> LAN IP (the hard-coded `10.0.2.2` only works inside the emulator).
+
+### 5. Run the mobile app on an Android emulator (Linux)
+
+The x86_64 system image needs hardware virtualization. This is a **one-time
+setup**; afterwards you only repeat step 5e.
+
+#### 5a. Enable virtualization in the BIOS
+
+Many machines ship with it **disabled**.
+
+1. Reboot and enter the **BIOS/UEFI** setup (commonly `F2`, `Del`, or `Esc` at boot).
+2. Under *Advanced → CPU Configuration* (or *Security*), enable
+   **Intel Virtualization Technology (VT‑x)** — or **SVM / AMD‑V** on AMD.
+3. Save & reboot.
+4. Verify it's on:
+   ```bash
+   grep -c vmx /proc/cpuinfo    # Intel: must be > 0
+   grep -c svm /proc/cpuinfo    # AMD:   must be > 0
+   ```
+
+#### 5b. Enable KVM (one-time, needs sudo)
+
+```bash
+sudo modprobe kvm-intel        # or: sudo modprobe kvm-amd
+sudo usermod -aG kvm "$USER"   # then log out and back in
+ls -l /dev/kvm                 # should now exist and be group-readable
+```
+
+#### 5c. Install the Android SDK (user-space, no sudo needed)
+
+```bash
+export ANDROID_HOME="$HOME/Android/Sdk"
+
+# command-line tools → $ANDROID_HOME/cmdline-tools/latest
+mkdir -p "$ANDROID_HOME/cmdline-tools"
+curl -L -o /tmp/cmdtools.zip \
+  https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+unzip -q /tmp/cmdtools.zip -d /tmp/cmdtools
+mv /tmp/cmdtools/cmdline-tools "$ANDROID_HOME/cmdline-tools/latest"
+
+export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
+
+yes | sdkmanager --licenses
 sdkmanager "platform-tools" "emulator" "platforms;android-34" \
            "system-images;android-34;google_apis;x86_64"
-avdmanager create avd -n talkbudget \
-           -k "system-images;android-34;google_apis;x86_64" -d pixel_7
-
-# Boot + run the app:
-emulator -avd talkbudget -gpu swiftshader_indirect &
-bunx expo start --android      # installs Expo Go on the emulator and opens the app
 ```
+
+> Persist the `ANDROID_HOME` / `PATH` exports in your `~/.bashrc` (and the Node
+> bin dir if Node is installed user-space) so new shells pick them up.
+
+#### 5d. Create the virtual device (AVD)
+
+```bash
+avdmanager create avd -n talkbudget \
+  -k "system-images;android-34;google_apis;x86_64" -d pixel_7
+```
+
+#### 5e. Boot the emulator and launch the app
+
+```bash
+# 1) make sure the backend is up (repo root): docker compose up -d
+# 2) boot the emulator (KVM makes this ~30s instead of minutes):
+emulator -avd talkbudget -gpu swiftshader_indirect -no-boot-anim &
+adb wait-for-device
+adb shell 'while [ "$(getprop sys.boot_completed)" != 1 ]; do sleep 1; done'  # wait for boot
+
+# 3) build + open the app (auto-installs Expo Go on the emulator):
+cd mobile
+bunx expo start --android
+```
+
+## Verification
+
+```bash
+bunx tsc --noEmit     # TypeScript typecheck
+npx expo-doctor       # project health check (should be all green)
+```
+
+## Troubleshooting
+
+- **Login shows "Network request failed" / `ECONNREFUSED`** — the backend isn't
+  reachable at `10.0.2.2:8000`. Start it with `docker compose up -d` (containers
+  stop after a reboot).
+- **Emulator won't boot or is unusably slow** — virtualization isn't active:
+  re-check `grep -c vmx /proc/cpuinfo` and that `/dev/kvm` exists (steps 5a–5b).
+- **`node` / `npx` not found** — Node isn't on your `PATH`; install Node 20 LTS
+  (e.g. via `nvm`) and add it to `PATH`.
+- **Metro serves a stale bundle after an edit** — restart with `bunx expo start -c`
+  (clears the cache). Kill a stray Metro **by port** (`ss -ltnp | grep :8081` →
+  `kill -9 <pid>`), never by matching `"expo start"` (that also matches your shell).
 
 ## Project structure
 
