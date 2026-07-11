@@ -36,6 +36,13 @@ Services:
 > The stack also boots without a `.env` file using the safe defaults baked into
 > `backend/app/core/config.py`.
 
+## Mobile app
+
+A native **Expo / React Native** client lives in [`mobile/`](mobile/README.md). It
+mirrors the web UI and talks to the same backend. See the
+[mobile README](mobile/README.md) for screenshots (design reference), setup, and
+how to run it on an Android emulator.
+
 ## Authentication & RBAC
 
 JWT-based auth with two roles: `admin` and `user`.
@@ -78,5 +85,6 @@ talk-budget/
 │       ├── app/        # App Router pages (login, dashboard)
 │       ├── components/ # BalanceHeader, CategoryRow, AccountCard
 │       └── lib/        # API fetching utils
+├── mobile/             # Expo / React Native app (see mobile/README.md)
 └── docker-compose.yml
 ```
