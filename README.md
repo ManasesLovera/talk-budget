@@ -36,6 +36,53 @@ Services:
 > The stack also boots without a `.env` file using the safe defaults baked into
 > `backend/app/core/config.py`.
 
+## Screenshots
+
+Captured from the running web app (`docker compose up`) with Playwright, at
+1440×900 (desktop) and Pixel 5 dimensions (mobile web).
+
+<table>
+  <tr>
+    <td align="center"><b>Dashboard</b></td>
+    <td align="center"><b>Transactions</b></td>
+    <td align="center"><b>Wallets</b></td>
+  </tr>
+  <tr>
+    <td><img src="docs/readme-screenshots/desktop-dashboard.png" width="280" alt="Dashboard (desktop)" /></td>
+    <td><img src="docs/readme-screenshots/desktop-transactions.png" width="280" alt="Transactions (desktop)" /></td>
+    <td><img src="docs/readme-screenshots/desktop-wallets.png" width="280" alt="Wallets (desktop)" /></td>
+  </tr>
+  <tr>
+    <td><img src="docs/readme-screenshots/mobile-dashboard.png" width="200" alt="Dashboard (mobile web)" /></td>
+    <td><img src="docs/readme-screenshots/mobile-transactions.png" width="200" alt="Transactions (mobile web)" /></td>
+    <td><img src="docs/readme-screenshots/mobile-wallets.png" width="200" alt="Wallets (mobile web)" /></td>
+  </tr>
+  <tr>
+    <td align="center"><b>AI Assistant</b></td>
+    <td align="center"><b>Settings</b></td>
+    <td align="center"></td>
+  </tr>
+  <tr>
+    <td><img src="docs/readme-screenshots/desktop-chat.png" width="280" alt="AI chat widget (desktop)" /></td>
+    <td><img src="docs/readme-screenshots/desktop-settings.png" width="280" alt="Settings (desktop)" /></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><img src="docs/readme-screenshots/mobile-chat.png" width="200" alt="AI chat page (mobile web)" /></td>
+    <td><img src="docs/readme-screenshots/mobile-settings.png" width="200" alt="Settings (mobile web)" /></td>
+    <td></td>
+  </tr>
+</table>
+
+### Native app: on-device voice transcription (Android)
+
+The Expo/React Native app in [`mobile/`](mobile/README.md) adds an Android-only
+microphone button on the chat screen, backed by the device's native
+`SpeechRecognizer` API (`expo-speech-recognition`) — captured below on the
+`talkbudget` AVD (Pixel 7, API 34):
+
+<img src="docs/readme-screenshots/mobile-chat-voice.png" width="220" alt="Chat screen with native voice input button (Android)" />
+
 ## Mobile app
 
 A native **Expo / React Native** client lives in [`mobile/`](mobile/README.md). It
