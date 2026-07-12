@@ -89,6 +89,21 @@ This is **not** OpenAI or Anthropic — it talks to OpenAI-compatible providers 
 - `Wallet.balance` is mutated directly (not derived) when transactions are created — see `_tool_create_transaction` in the AI gateway and the equivalent path in `api/transactions.py` for the pattern of updating wallet balance alongside transaction inserts.
 - `Category` rows with `owner_id=None` are global/shared defaults seeded once; user-created categories are scoped to `owner_id`.
 
+## Mobile emulator (Android)
+
+This dev machine has a **working Android emulator** — don't assume it's unavailable due to missing KVM/virtualization; check first (`ls -l /dev/kvm`, `grep -c vmx /proc/cpuinfo`) before falling back to Expo web for mobile testing. Full one-time setup steps (BIOS/KVM, SDK install, AVD creation) are in `mobile/README.md` step 5 — on this machine that setup is already done:
+
+- Android SDK at `~/Android/Sdk` (`ANDROID_HOME`); add `cmdline-tools/latest/bin`, `platform-tools`, `emulator` to `PATH`.
+- An AVD named **`talkbudget`** already exists (Pixel 7, x86_64, API 34).
+- Node is not on `PATH` by default — it's installed user-space (check `~/.nvm/versions/node/*/bin` or `~/.local/node-*/bin`); prefix commands with the right `bin` dir, or `bun`/`bunx` also work for most scripts.
+- **JDK for Gradle builds (`expo run:android` / `expo prebuild` native builds):** the system default `java` is JDK 25, which Gradle 8.8 (RN 0.74/Expo 51's version) rejects with `Unsupported class file major version 69`. `/usr/lib/jvm/java-21-openjdk-amd64` exists but is **JRE-only** (no `jlink`), which fails later with `jlink executable ... does not exist` when building modules that need `androidJdkImage`. Use a full JDK 21 instead — a portable Temurin build was installed user-space at `~/.local/jdk/jdk-21.0.11+10`; set `JAVA_HOME` to it and put `$JAVA_HOME/bin` first on `PATH` before running any Gradle-driven command.
+- Boot: `emulator -avd talkbudget -no-snapshot -gpu swiftshader_indirect -no-boot-anim` (run detached, e.g. `setsid ... &disown`, since it's a long-lived process). Wait for it with `adb wait-for-device` then poll `adb shell getprop sys.boot_completed` until `1`.
+- Launch the app: `npx expo start --android` works only while the app has **no native modules beyond Expo Go's built-ins** (it auto-installs/opens Expo Go). Once a native module is linked (e.g. `expo-speech-recognition`), Expo Go can no longer load the JS bundle — use `npx expo run:android` instead, which builds the custom dev client via Gradle and installs it (slower on first build).
+- Backend must be reachable at `10.0.2.2:8000` from the emulator (host loopback) — start it with `docker compose up -d` from the repo root; a host reboot stops the containers.
+- Screenshot the emulator: `adb exec-out screencap -p > out.png` (1080x2400 device pixels). Drive UI via `adb shell input tap X Y` / `input text "..."` using those **raw 1080x2400 coordinates** — if the image is shown to you at a downscaled preview size, scale coordinates back up before tapping or you'll miss the target.
+- Text fields with a dotted/placeholder-looking password field can be deceiving — a masked placeholder (e.g. `••••••••`) looks identical to real typed content at a glance. Tap the field and type, then verify the field via a screenshot before assuming the value was entered (compare against known placeholder patterns).
+- **Gotcha:** never `pkill -f "expo start"` — it matches the shell command running it and kills its own shell. Kill Metro by the port it's bound to instead (`ss -ltnp | grep :<port>` → `kill -9 <pid>`); a stale Metro left on a port will silently keep serving an old bundle.
+
 ## Background session behavior
 
 For background agents working on this project:
