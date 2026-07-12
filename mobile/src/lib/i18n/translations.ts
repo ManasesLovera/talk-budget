@@ -189,6 +189,10 @@ const en = {
       "How much cash do I have?",
     ],
     somethingWentWrong: "Something went wrong.",
+    micButtonLabel: "Voice input",
+    micUnavailable: "Voice input isn't available on this device or Android version.",
+    micPermissionDenied: "Microphone access is disabled. Enable it in your device settings to use voice input.",
+    micListening: "Listening…",
   },
 };
 
@@ -374,6 +378,10 @@ const es: typeof en = {
       "¿Cuánto efectivo tengo?",
     ],
     somethingWentWrong: "Algo salió mal.",
+    micButtonLabel: "Entrada de voz",
+    micUnavailable: "La entrada de voz no está disponible en este dispositivo o versión de Android.",
+    micPermissionDenied: "El acceso al micrófono está desactivado. Actívalo en la configuración del dispositivo para usar la entrada de voz.",
+    micListening: "Escuchando…",
   },
 };
 

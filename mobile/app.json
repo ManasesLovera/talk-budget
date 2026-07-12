@@ -15,6 +15,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.talkbudget.mobile",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -22,6 +23,16 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to use the microphone for voice input.",
+          "speechRecognitionPermission": "Allow $(PRODUCT_NAME) to use speech recognition for voice input.",
+          "androidSpeechServicePackages": ["com.google.android.googlequicksearchbox"]
+        }
+      ]
+    ]
   }
 }

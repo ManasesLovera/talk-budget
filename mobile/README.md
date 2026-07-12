@@ -197,6 +197,34 @@ cd mobile
 bunx expo start --android
 ```
 
+### 6. Voice input (Android speech-to-text) — requires a dev client build
+
+The chat screen's microphone button (Android only) uses `expo-speech-recognition`,
+which wraps Android's native `SpeechRecognizer` API via a native module. **Expo Go
+cannot load native modules**, so as soon as this dependency is installed, testing
+the mic button (or anything else on Android) needs a **custom dev client** instead
+of plain Expo Go:
+
+```bash
+cd mobile
+bunx expo prebuild --platform android   # one-time; regenerates android/ from app.json
+bunx expo run:android                   # builds + installs the dev client, then launches it
+```
+
+> `android/` is committed to the repo, so most contributors won't need to run
+> `expo prebuild` again unless `app.json`'s native config (plugins, package name,
+> permissions) changes — in which case re-run it to sync `android/`.
+
+For a build you can install without a dev machine attached, use EAS instead:
+
+```bash
+bunx eas build --profile development --platform android
+```
+
+This only affects **Android**. iOS and web are unaffected — the mic button is
+hidden on those platforms (see `ChatScreen.tsx`), so steps 3 and 4 above (Expo Go /
+`--web`) keep working exactly as before for everything except voice input.
+
 ## Verification
 
 ```bash

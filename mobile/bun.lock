@@ -11,6 +11,7 @@
         "@react-navigation/native": "^6.1.17",
         "@react-navigation/stack": "^6.3.29",
         "expo": "~51.0.0",
+        "expo-speech-recognition": "0.3.2",
         "expo-status-bar": "~1.12.1",
         "lucide-react-native": "^0.417.0",
         "react": "18.2.0",
@@ -811,6 +812,8 @@
     "expo-modules-autolinking": ["expo-modules-autolinking@1.11.3", "", { "dependencies": { "chalk": "^4.1.0", "commander": "^7.2.0", "fast-glob": "^3.2.5", "find-up": "^5.0.0", "fs-extra": "^9.1.0", "require-from-string": "^2.0.2", "resolve-from": "^5.0.0" }, "bin": { "expo-modules-autolinking": "bin/expo-modules-autolinking.js" } }, "sha512-oYh8EZEvYF5TYppxEKUTTJmbr8j7eRRnrIxzZtMvxLTXoujThVPMFS/cbnSnf2bFm1lq50TdDNABhmEi7z0ngQ=="],
 
     "expo-modules-core": ["expo-modules-core@1.12.26", "", { "dependencies": { "invariant": "^2.2.4" } }, "sha512-y8yDWjOi+rQRdO+HY+LnUlz8qzHerUaw/LUjKPU/mX8PRXP4UUPEEp5fjAwBU44xjNmYSHWZDwet4IBBE+yQUA=="],
+
+    "expo-speech-recognition": ["expo-speech-recognition@0.3.2", "", { "peerDependencies": { "expo": "*", "react": "*", "react-native": "*" } }, "sha512-GFFGv2kHga5okzxOgJqeOnTkjZ78v0SblIfFlBxerKU7LSM+N4LfDQNybYd8xc6z0wC2dwKYW+FxNLtNCp7ouA=="],
 
     "expo-status-bar": ["expo-status-bar@1.12.1", "", {}, "sha512-/t3xdbS8KB0prj5KG5w7z+wZPFlPtkgs95BsmrP/E7Q0xHXTcDcQ6Cu2FkFuRM+PKTb17cJDnLkawyS5vDLxMA=="],
 

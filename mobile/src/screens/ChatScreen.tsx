@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -11,16 +11,25 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { Send, Trash2, Plus, History, MessageSquare } from "lucide-react-native";
+import { Send, Trash2, Plus, History, MessageSquare, Mic, MicOff } from "lucide-react-native";
+import {
+  ExpoSpeechRecognitionModule,
+  getSpeechRecognitionServices,
+  isRecognitionAvailable,
+  useSpeechRecognitionEvent,
+} from "expo-speech-recognition";
 import { useAuth } from "../lib/auth-context";
 import { useChatHistory } from "../lib/use-chat-history";
 import { useLanguage } from "../lib/i18n/language-context";
 import { sendChatMessage } from "../lib/api";
 
+type MicAvailability = "hidden" | "checking" | "available" | "unavailable" | "permission-denied";
+
 export default function ChatScreen() {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const SUGGESTIONS = t.chat.suggestions;
+  const speechLocale = language === "es" ? "es-ES" : "en-US";
 
   const {
     messages,
@@ -39,6 +48,79 @@ export default function ChatScreen() {
   const [loading, setLoading] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+
+  const [micAvailability, setMicAvailability] = useState<MicAvailability>(
+    Platform.OS === "android" ? "checking" : "hidden"
+  );
+  const [isListening, setIsListening] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+
+    (async () => {
+      try {
+        if (!isRecognitionAvailable() || getSpeechRecognitionServices().length === 0) {
+          setMicAvailability("unavailable");
+          return;
+        }
+
+        let permission = await ExpoSpeechRecognitionModule.getPermissionsAsync();
+        if (permission.status === "undetermined") {
+          permission = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+        }
+
+        if (permission.granted) {
+          setMicAvailability("available");
+        } else if (!permission.canAskAgain) {
+          setMicAvailability("permission-denied");
+        } else {
+          setMicAvailability("available");
+        }
+      } catch {
+        setMicAvailability("unavailable");
+      }
+    })();
+  }, []);
+
+  useSpeechRecognitionEvent("result", (event) => {
+    const transcript = event.results[0]?.transcript;
+    if (transcript) setInput(transcript);
+  });
+
+  useSpeechRecognitionEvent("end", () => {
+    setIsListening(false);
+  });
+
+  useSpeechRecognitionEvent("error", async (event) => {
+    setIsListening(false);
+    if (event.error === "not-allowed") {
+      const permission = await ExpoSpeechRecognitionModule.getPermissionsAsync();
+      setMicAvailability(permission.canAskAgain ? "available" : "permission-denied");
+    }
+  });
+
+  const handleMicPress = useCallback(async () => {
+    if (isListening) {
+      ExpoSpeechRecognitionModule.stop();
+      return;
+    }
+
+    let permission = await ExpoSpeechRecognitionModule.getPermissionsAsync();
+    if (!permission.granted) {
+      permission = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+    }
+    if (!permission.granted) {
+      setMicAvailability(permission.canAskAgain ? "available" : "permission-denied");
+      return;
+    }
+
+    setIsListening(true);
+    ExpoSpeechRecognitionModule.start({
+      lang: speechLocale,
+      interimResults: true,
+      continuous: false,
+    });
+  }, [isListening, speechLocale]);
 
   useEffect(() => {
     if (messages.length > 0 && !showHistory) {
@@ -213,15 +295,44 @@ export default function ChatScreen() {
               </View>
             )}
 
+            {/* Voice input warning */}
+            {(micAvailability === "unavailable" || micAvailability === "permission-denied") && (
+              <View style={styles.micWarningRow}>
+                <Text style={styles.micWarningText}>
+                  {micAvailability === "permission-denied"
+                    ? t.chat.micPermissionDenied
+                    : t.chat.micUnavailable}
+                </Text>
+              </View>
+            )}
+
             {/* Message input form */}
             <View style={styles.inputForm}>
               <TextInput
                 value={input}
                 onChangeText={setInput}
-                placeholder={t.chat.askPlaceholder}
+                placeholder={isListening ? t.chat.micListening : t.chat.askPlaceholder}
                 placeholderTextColor="#94a3b8"
                 style={styles.textInput}
               />
+              {micAvailability !== "hidden" && (
+                <TouchableOpacity
+                  onPress={handleMicPress}
+                  disabled={micAvailability !== "available"}
+                  accessibilityLabel={t.chat.micButtonLabel}
+                  style={[
+                    styles.micBtn,
+                    micAvailability !== "available" && styles.micBtnDisabled,
+                    isListening && styles.micBtnActive,
+                  ]}
+                >
+                  {isListening ? (
+                    <MicOff size={16} color="#ffffff" />
+                  ) : (
+                    <Mic size={16} color={micAvailability === "available" ? "#ffffff" : "#94a3b8"} />
+                  )}
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 onPress={() => send(input)}
                 disabled={loading || !input.trim()}
@@ -398,6 +509,30 @@ const styles = StyleSheet.create({
   },
   sendBtnDisabled: {
     opacity: 0.5,
+  },
+  micBtn: {
+    backgroundColor: "#0f6b56",
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  micBtnDisabled: {
+    backgroundColor: "#e2e8f0",
+    opacity: 0.7,
+  },
+  micBtnActive: {
+    backgroundColor: "#ef4444",
+  },
+  micWarningRow: {
+    paddingHorizontal: 16,
+    paddingBottom: 6,
+  },
+  micWarningText: {
+    fontSize: 11,
+    color: "#94a3b8",
+    textAlign: "center",
   },
   historyContainer: {
     padding: 16,
